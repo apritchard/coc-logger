@@ -5,36 +5,44 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
-
-import com.amp.coclogger.external.Binarization;
 
 import net.miginfocom.swing.MigLayout;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 
+import com.amp.coclogger.external.Binarization;
+import com.amp.coclogger.prefs.PrefName;
+import com.amp.coclogger.prefs.PreferencesPanel;
+
 public class CocLoggerPanel extends JPanel implements SelectionListener {
 	private static final long serialVersionUID = 1L;
 
+	Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
 	int textX, textY, textWidth, textHeight;
 
 	JLabel lblMonitorWindow;
 	JTextPane textParsedValue;
-	JTextField textUpdateDelay;
 	ScheduledExecutorService monitorService = Executors
 			.newScheduledThreadPool(1);
 	ScreenMonitor screenMonitor = new ScreenMonitor();
@@ -45,7 +53,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 
 		final SelectionListener selectionListener = this;
 		setLayout(new MigLayout());
-
+		
 		JButton btnCalibrate = new JButton("Calibrate");
 		btnCalibrate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -70,10 +78,6 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		textParsedValue = new JTextPane();
 		add(textParsedValue, "wrap, push, grow");
 
-		add(new JLabel("Update Delay (s)"));
-		textUpdateDelay = new JTextField();
-		add(textUpdateDelay, "width 100px");
-
 	}
 
 	@Override
@@ -83,18 +87,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		this.textWidth = width;
 		this.textHeight = height;
 
-		int delaySeconds = 1;
-		if (!textUpdateDelay.getText().isEmpty()) {
-			try {
-				delaySeconds = Math.max(delaySeconds,
-						Integer.parseInt(textUpdateDelay.getText()));
-			} catch (NumberFormatException nfe) {
-				textUpdateDelay.setText("1");
-			}
-		} else {
-			textUpdateDelay.setText("1");
-		}
-
+		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.getPathName(), 1), 1);
+		
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
 			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,

@@ -5,26 +5,25 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.prefs.Preferences;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
@@ -38,7 +37,9 @@ import com.amp.coclogger.prefs.PreferencesPanel;
 public class CocLoggerPanel extends JPanel implements SelectionListener {
 	private static final long serialVersionUID = 1L;
 
-	Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
+	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
+	private static Map<String, Integer> prefixNameCounters = new HashMap<>();
+	
 	int textX, textY, textWidth, textHeight;
 
 	JLabel lblMonitorWindow;
@@ -175,22 +176,81 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 	}
 
 	class ScreenMonitor implements Runnable {
-
+		
+		private BufferedImage prevImg;
+		private String prevValues;
+		
 		@Override
 		public void run() {
-			final BufferedImage img = captureScreen(textX, textY, textWidth,
-					textHeight);
-			final BufferedImage binarizedImg2 = Binarization.getBinarizedImage(
-					img, 180);
-			final String values = readImage(binarizedImg2);
+			System.out.println("Monitor running");
+			final BufferedImage img = captureScreen(textX, textY, textWidth,textHeight);
+			final BufferedImage binImg = Binarization.getBinarizedImage(img, 180);
+			
+			if(bufferedImagesEqual(binImg, prevImg)){
+				System.out.println("Identical image");
+				return;
+			}
+			prevImg = binImg;
+			
+			final String values = readImage(binImg);
+			if(values.equalsIgnoreCase(prevValues)){
+				System.out.println("Same values");
+				return;
+			}
+			prevValues = values;
+			
+			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.getPathName(), false)){
+				saveImageToTif(binImg);
+			}
+			
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					System.out.println("Monitor running");
 					lblMonitorWindow.setIcon(new ImageIcon(img));
 					textParsedValue.setText(values);
 				}
 			});
+		}
+		
+		private void saveImageToTif(BufferedImage binImg) {
+			String path = prefs.get(PrefName.IMAGE_SAVE_PATH.getPathName(), "");
+			String prefix = prefs.get(PrefName.IMAGE_SAVE_PREFIX.getPathName(), "");
+			String language = prefs.get(PrefName.LANGUAGE.getPathName(), "foo");
+			if(prefixNameCounters.get(prefix) == null){
+				prefixNameCounters.put(prefix, 0);
+			}
+			Integer suffixNum = prefixNameCounters.get(prefix);
+			prefixNameCounters.put(prefix, suffixNum+1);
+			String fullName = path + "\\" + language + "." + prefix + ".exp" + suffixNum + ".tif";
+			File file = new File(fullName);
+			file.mkdirs();
+			try {
+				ImageIO.write(binImg, "TIFF", file);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+
+		boolean bufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
+			if(img1 == null && img2 == null){
+				return true;
+			} 
+			if(img1 == null || img2 == null){
+				return false;
+			}
+		    if (img1.getWidth() == img2.getWidth() && img1.getHeight() == img2.getHeight()) {
+		        for (int x = 0; x < img1.getWidth(); x++) {
+		            for (int y = 0; y < img1.getHeight(); y++) {
+		                if (img1.getRGB(x, y) != img2.getRGB(x, y))
+		                    return false;
+		            }
+		        }
+		    } else {
+		        return false;
+		    }
+		    return true;
 		}
 
 	}

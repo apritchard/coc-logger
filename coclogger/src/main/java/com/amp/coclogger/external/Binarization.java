@@ -178,8 +178,6 @@ public class Binarization {
 
 	private static BufferedImage binarize(BufferedImage original, int threshold) {
 		
-		System.out.println("Binarizing with threshold " + threshold);
-
 		int red;
 		int newPixel;
 

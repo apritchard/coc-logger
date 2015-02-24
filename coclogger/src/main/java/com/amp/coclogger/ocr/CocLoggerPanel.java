@@ -1,4 +1,4 @@
-package coclogger;
+package com.amp.coclogger.ocr;
 
 import java.awt.AWTException;
 import java.awt.Rectangle;
@@ -21,10 +21,11 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
+import com.amp.coclogger.external.Binarization;
+
 import net.miginfocom.swing.MigLayout;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
-import yoink.Binarization;
 
 public class CocLoggerPanel extends JPanel implements SelectionListener {
 	private static final long serialVersionUID = 1L;
@@ -90,6 +91,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 			} catch (NumberFormatException nfe) {
 				textUpdateDelay.setText("1");
 			}
+		} else {
+			textUpdateDelay.setText("1");
 		}
 
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){

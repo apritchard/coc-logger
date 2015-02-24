@@ -1,4 +1,4 @@
-package yoink;
+package com.amp.coclogger.external;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

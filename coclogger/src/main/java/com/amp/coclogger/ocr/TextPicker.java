@@ -1,4 +1,4 @@
-package coclogger;
+package com.amp.coclogger.ocr;
 
 import java.awt.Color;
 import java.awt.Font;

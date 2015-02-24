@@ -4,3 +4,7 @@ pom.xml.releaseBackup
 pom.xml.versionsBackup
 pom.xml.next
 release.properties
+*.classpath
+*.project
+coclogger/.settings/org.eclipse.jdt.core.prefs
+coclogger/.settings/org.eclipse.m2e.core.prefs

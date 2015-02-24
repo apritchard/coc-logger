@@ -122,6 +122,7 @@ public class PreferencesPanel extends JPanel {
 			}
 		});
 		add(browseButton, "wrap");
+		textFields.put(textField, prefName.getPathName());
 	}
 	
 	private void chooseDirectory(JTextField textField, PrefName prefName, Component chooserParent){
@@ -139,8 +140,6 @@ public class PreferencesPanel extends JPanel {
 		if (chooser.showOpenDialog(chooserParent) == JFileChooser.APPROVE_OPTION){
 			textField.setText(chooser.getSelectedFile().getAbsolutePath());
 		}
-		
-
 	}
 	
 }

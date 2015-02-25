@@ -1,10 +1,13 @@
 package com.amp.coclogger.ocr;
 
 import java.awt.AWTException;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -90,6 +93,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 
 		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.getPathName(), 1), 1);
 		
+//		foo();
+		
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
 			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
@@ -113,24 +118,43 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		final BufferedImage img = captureScreen(textX, textY, textWidth,
 				textHeight);
 		final BufferedImage binarizedImg = Binarization.getBinarizedImage(img);
-		final BufferedImage binarizedImg2 = Binarization.getBinarizedImage(img,
-				180);
+		final BufferedImage binarizedImg2 = Binarization.getBinarizedImage(img, 180);
+		Image enlargedImg = binarizedImg2.getScaledInstance(textWidth*2, textHeight*2, Image.SCALE_SMOOTH);
+		final BufferedImage enlargedBi = new BufferedImage(enlargedImg.getWidth(null), enlargedImg.getHeight(null), BufferedImage.TYPE_BYTE_BINARY);
+		enlargedBi.getGraphics().drawImage(enlargedImg, 0, 0, null);
+		
+
+		
+		
 		String nums = readImage(img);
 		System.out.println("Text: " + nums);
 		System.out.println("BinarText: " + readImage(binarizedImg));
 		System.out.println("BinarText2: " + readImage(binarizedImg2));
+		System.out.println("Enlarged: " + readImage(enlargedBi));
+
 
 		SwingUtilities.invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
+				
+				BufferedImage enlargedBi2 = new BufferedImage(textWidth*2, textHeight*2, BufferedImage.TYPE_BYTE_BINARY);
+				
+				AffineTransform at = new AffineTransform();
+				at.scale(2.0, 2.0);
+				AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
+				enlargedBi2 = scaleOp.filter(binarizedImg2, enlargedBi2);
+				System.out.println("Enlarged2: " + readImage(enlargedBi2));
+				
 				JPanel panel = new JPanel();
 				panel.add(new JLabel(new ImageIcon(img)));
 				panel.add(new JLabel(new ImageIcon(binarizedImg)));
 				panel.add(new JLabel(new ImageIcon(binarizedImg2)));
+				panel.add(new JLabel(new ImageIcon(enlargedBi)));
+				panel.add(new JLabel(new ImageIcon(enlargedBi2)));
 				JFrame frame = new JFrame();
-				frame.setBounds(100, 100, img.getWidth() + 50,
-						(img.getHeight() * 3) + 50);
+				frame.setBounds(100, 100, img.getWidth()*2 + 50,
+						(img.getHeight() * 7) + 50);
 				frame.getContentPane().add(panel);
 				frame.setVisible(true);
 				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -182,9 +206,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		
 		@Override
 		public void run() {
+			int THRESHOLD = 185;
 			System.out.println("Monitor running");
 			final BufferedImage img = captureScreen(textX, textY, textWidth,textHeight);
-			final BufferedImage binImg = Binarization.getBinarizedImage(img, 180);
+			final BufferedImage binImg = Binarization.getBinarizedImage(img, THRESHOLD);
 			
 			if(bufferedImagesEqual(binImg, prevImg)){
 				System.out.println("Identical image");

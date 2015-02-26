@@ -32,6 +32,7 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.swing.MigLayout;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import net.sourceforge.vietocr.ImageHelper;
 
 import com.amp.coclogger.external.Binarization;
 import com.amp.coclogger.prefs.PrefName;
@@ -93,13 +94,13 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 
 		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.getPathName(), 1), 1);
 		
-//		foo();
+		foo();
 		
-		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
-			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
-			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
-					0, delaySeconds, TimeUnit.SECONDS);
-		}
+//		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
+//			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
+//			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
+//					0, delaySeconds, TimeUnit.SECONDS);
+//		}
 	}
 
 	private void pickArea(final SelectionListener selectionListener,
@@ -123,14 +124,28 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		final BufferedImage enlargedBi = new BufferedImage(enlargedImg.getWidth(null), enlargedImg.getHeight(null), BufferedImage.TYPE_BYTE_BINARY);
 		enlargedBi.getGraphics().drawImage(enlargedImg, 0, 0, null);
 		
+		final BufferedImage bi3 = ImageHelper.convertImageToBinary(img);
+		final BufferedImage gs1 = ImageHelper.convertImageToGrayscale(img);
+		final BufferedImage ebi1 = ImageHelper.getScaledInstance(bi3, bi3.getWidth()*2, bi3.getHeight()*2);
+		final BufferedImage egs1 = ImageHelper.getScaledInstance(gs1, gs1.getWidth()*2, gs1.getHeight()*2);
+		
+		final BufferedImage i1 = ImageHelper.invertImageColor(binarizedImg2);
+		final BufferedImage i2 = Binarization.getBinarizedImage(ImageHelper.invertImageColor(img));
+		
 
 		
 		
 		String nums = readImage(img);
 		System.out.println("Text: " + nums);
-		System.out.println("BinarText: " + readImage(binarizedImg));
+//		System.out.println("BinarText: " + readImage(binarizedImg));
 		System.out.println("BinarText2: " + readImage(binarizedImg2));
 		System.out.println("Enlarged: " + readImage(enlargedBi));
+//		System.out.println("bi3: " + readImage(bi3));
+//		System.out.println("gs1: " + readImage(gs1));
+//		System.out.println("ebi1: " + readImage(ebi1));
+//		System.out.println("egs1: " + readImage(egs1));
+//		System.out.println("i1: " + readImage(i1));
+//		System.out.println("i2: " + readImage(i2));
 
 
 		SwingUtilities.invokeLater(new Runnable() {
@@ -148,16 +163,20 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 				
 				JPanel panel = new JPanel();
 				panel.add(new JLabel(new ImageIcon(img)));
-				panel.add(new JLabel(new ImageIcon(binarizedImg)));
+//				panel.add(new JLabel(new ImageIcon(binarizedImg)));
 				panel.add(new JLabel(new ImageIcon(binarizedImg2)));
+//				panel.add(new JLabel(new ImageIcon(bi3)));
+//				panel.add(new JLabel(new ImageIcon(gs1)));
+//				panel.add(new JLabel(new ImageIcon(i1)));
+//				panel.add(new JLabel(new ImageIcon(i2)));
+				
 				panel.add(new JLabel(new ImageIcon(enlargedBi)));
 				panel.add(new JLabel(new ImageIcon(enlargedBi2)));
 				JFrame frame = new JFrame();
 				frame.setBounds(100, 100, img.getWidth()*2 + 50,
-						(img.getHeight() * 7) + 50);
+						(img.getHeight() * 5) + 50);
 				frame.getContentPane().add(panel);
 				frame.setVisible(true);
-				frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			}
 		});
 	}
@@ -179,7 +198,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		Tesseract tess = Tesseract.getInstance();
 		tess.setConfigs(Arrays.asList(new String[] { "digits" }));
 		tess.setPageSegMode(6);
-		tess.setLanguage("eng");
+		tess.setLanguage("coc");
 
 		try {
 			String text = tess.doOCR(bi);
@@ -206,7 +225,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		
 		@Override
 		public void run() {
-			int THRESHOLD = 185;
+			int THRESHOLD = 180;
 			System.out.println("Monitor running");
 			final BufferedImage img = captureScreen(textX, textY, textWidth,textHeight);
 			final BufferedImage binImg = Binarization.getBinarizedImage(img, THRESHOLD);

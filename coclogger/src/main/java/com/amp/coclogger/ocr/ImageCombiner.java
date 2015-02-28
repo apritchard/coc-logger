@@ -1,0 +1,62 @@
+package com.amp.coclogger.ocr;
+
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+public class ImageCombiner {
+	private Queue<BufferedImage> images;
+	int width, height;
+	int imagesPerPage;
+	
+	ImageCombiner(int width, int height, int imagesPerPage){
+		this.width = width;
+		this.height = height;
+		
+		this.imagesPerPage = imagesPerPage;
+		
+		images = new LinkedList<>();
+	}
+	
+	public void add(BufferedImage bi){
+		images.add(bi);
+	}
+	
+	
+	public List<BufferedImage> combine(){
+		List<BufferedImage> imagesToPrint = new ArrayList<>();
+		
+		double rowsD = Math.floor(Math.sqrt((double)imagesPerPage));
+		double colsD = Math.ceil(imagesPerPage/rowsD);
+		int rows = (int)rowsD;
+		int cols = (int)colsD;
+		
+		int w = width * cols;
+		int h = height * rows;
+		
+		while(!images.isEmpty()){
+			BufferedImage temp = new BufferedImage(w,h, BufferedImage.TYPE_BYTE_BINARY);
+			Graphics2D g2d = temp.createGraphics();
+			for(int i = 0; i < rows; i++){
+				for(int j = 0; j < cols; j++){
+					BufferedImage img = images.poll();
+					g2d.drawImage(img, null, width*j, height*i);
+					if(images.isEmpty()){
+						imagesToPrint.add(temp);
+						return imagesToPrint;
+					}
+				}
+			}
+			imagesToPrint.add(temp);
+		}
+		//shouldn't get here, but...
+		return imagesToPrint;
+	}
+	
+	
+	
+
+}

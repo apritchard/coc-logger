@@ -5,7 +5,8 @@ public enum PrefName {
 	LANGUAGE("language", PrefType.STRING), 
 	IMAGE_SAVE_ACTIVE("image-save-active", PrefType.BOOLEAN),
 	IMAGE_SAVE_PATH("image-save-path", PrefType.DIRECTORY), 
-	IMAGE_SAVE_PREFIX("image-save-prefix", PrefType.STRING);
+	IMAGE_SAVE_PREFIX("image-save-prefix", PrefType.STRING),
+	IMAGES_PER_PAGE("images-per-page", PrefType.INTEGER);
 	
 	private String pathName; 
 	private PrefType type;

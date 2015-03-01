@@ -1,4 +1,4 @@
-package com.amp.coclogger.ocr;
+package com.amp.coclogger.gui;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -37,9 +37,6 @@ public class TextPicker extends JFrame {
 		DragBoxAdapter adapter = new DragBoxAdapter();
 		addMouseListener(adapter);
 		addMouseMotionListener(adapter);
-
-		
-		setVisible(true);
 	}
 	
 	class DrawPanel extends JPanel {

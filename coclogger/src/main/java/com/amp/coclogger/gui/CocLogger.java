@@ -1,8 +1,9 @@
-package com.amp.coclogger.ocr;
+package com.amp.coclogger.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -10,19 +11,32 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
-public class CocLogger {
+public class CocLogger{
+	private final static Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
+	
+	private final static PreferencesPanel preferencesPanel = new PreferencesPanel();
+	private final static CocLoggerPanel cocLoggerPanel = new CocLoggerPanel();
+	
 	public static void main(String[] args) {
+		int appX = prefs.getInt(PrefName.APP_X.path(), 0);
+		int appY = prefs.getInt(PrefName.APP_Y.path(), 0);
+		int appWidth = prefs.getInt(PrefName.APP_WIDTH.path(), 600);
+		int appHeight = prefs.getInt(PrefName.APP_HEIGHT.path(), 480);
 		
 		JFrame frame = new JFrame();
-		frame.setSize(600, 480);
+		frame.setSize(appWidth, appHeight);
+		frame.setLocation(appX, appY);
+		frame.setTitle("Text Parser");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.addWindowListener(new CocWindowListener(frame));
 		
 		frame.setJMenuBar(buildMenuBar());
+		frame.getContentPane().add(cocLoggerPanel);
 		
-		CocLoggerPanel panel = new CocLoggerPanel();
-		frame.getContentPane().add(panel);
+		preferencesPanel.addListener(cocLoggerPanel);
 		frame.setVisible(true);
 	}
 	
@@ -38,10 +52,9 @@ public class CocLogger {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				PreferencesPanel p = new PreferencesPanel();
 				JFrame frame = new JFrame();
 				frame.setSize(400,300);
-				frame.getContentPane().add(p);
+				frame.getContentPane().add(preferencesPanel);
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame.setVisible(true);
 			}

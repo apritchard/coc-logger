@@ -1,7 +1,6 @@
-package com.amp.coclogger.ocr;
+package com.amp.coclogger.gui;
 
 import java.awt.AWTException;
-import java.awt.Container;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -12,6 +11,7 @@ import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -33,74 +33,140 @@ import net.sourceforge.tess4j.TesseractException;
 import net.sourceforge.vietocr.ImageHelper;
 
 import com.amp.coclogger.external.Binarization;
+import com.amp.coclogger.ocr.ImageCombiner;
+import com.amp.coclogger.ocr.ImageUtils;
+import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.PrefName;
+import com.amp.coclogger.prefs.PreferenceListener;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
-public class CocLoggerPanel extends JPanel implements SelectionListener {
+public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
 
 	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
+	
+	private static int count = 0;
 	
 	private ImageCombiner imageCombiner;
 	private static Map<String, Integer> prefixNameCounters = new HashMap<>();
 	
 	int textX, textY, textWidth, textHeight;
+	int leagueX, leagueY, leagueWidth, leagueHeight;
 
 	JLabel lblMonitorWindow;
 	JLabel lblMonitorEnhanceWindow;
+	JLabel lblLeagueWindow;
+	JLabel lblTownHallLevel;
+	
 	JTextPane textParsedValue;
 	ScheduledExecutorService monitorService = Executors
 			.newScheduledThreadPool(1);
 	ScreenMonitor screenMonitor = new ScreenMonitor();
 	ScheduledFuture<?> screenMonitorHandle;
+	
+	SelectionMode selectionMode;
 
 	public CocLoggerPanel() {
 		super();
 
+		textX = prefs.getInt(PrefName.TEXT_X.path(), 0);
+		textY = prefs.getInt(PrefName.TEXT_Y.path(), 0);
+		textWidth = prefs.getInt(PrefName.TEXT_WIDTH.path(), 1);
+		textHeight = prefs.getInt(PrefName.TEXT_HEIGHT.path(), 1);
+		leagueX = prefs.getInt(PrefName.LEAGUE_X.path(), 0);
+		leagueY = prefs.getInt(PrefName.LEAGUE_Y.path(), 0);
+		leagueWidth = prefs.getInt(PrefName.LEAGUE_WIDTH.path(), 1);
+		leagueHeight = prefs.getInt(PrefName.LEAGUE_HEIGHT.path(), 1);
+		
 		final SelectionListener selectionListener = this;
-		final Container parent = getTopLevelAncestor();
 		setLayout(new MigLayout());
 		
-		JButton btnCalibrate = new JButton("Calibrate");
+		JButton btnCalibrate = new JButton("Select Monitor Location");
 		btnCalibrate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				cancelScreenMonitor();
 				getTopLevelAncestor().setVisible(false);
-				pickArea(selectionListener,
-						"Drag a box around resource numbers");
+				selectionMode = SelectionMode.TEXT;
+				pickArea(selectionListener,	"Drag a box around resource numbers");
 			}
 		});
-		add(btnCalibrate, "split 2, flowy");
 
-		JButton btnCancel = new JButton("Cancel");
+		JButton btnMonitor = new JButton("Begin Monitoring");
+		btnMonitor.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				startScreenMonitor();
+			}
+		});
+	
+		JButton btnCancel = new JButton("Cancel Monitoring");
 		btnCancel.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				cancelScreenMonitor();
 			}
 		});
-		add(btnCancel);
+		
 		lblMonitorWindow = new JLabel("");
 		lblMonitorEnhanceWindow = new JLabel("");
-		add(lblMonitorEnhanceWindow, "height 300px, width 300px");
-		add(lblMonitorWindow, "height 300px, width 300px, wrap");
-
-		add(new JLabel("Parsed Value"));
+		lblLeagueWindow = new JLabel("");
+		lblTownHallLevel = new JLabel("Town Hall Level " + prefs.getInt(PrefName.TOWN_HALL_LEVEL.path(), 1));
 		textParsedValue = new JTextPane();
-		add(textParsedValue, "wrap, push, grow");
-
+		
+		String league = prefs.get(PrefName.LEAGUE.path(), "BRONZEI");
+		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
+//		lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueX, leagueY, leagueWidth, leagueHeight)));
+		lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
+		
+		add(btnCalibrate, "w 100%, span 2, wrap");
+		add(new JLabel("Original Image"));
+		add(new JLabel("Enhanced Image"), "wrap");
+		add(lblMonitorWindow, "push, grow, w 50%, h 40%");
+		add(lblMonitorEnhanceWindow, "push, grow, w 50, h 40%, wrap");
+		add(new JLabel("Parsed Value"));
+		add(lblTownHallLevel, "center, wrap");
+		add(textParsedValue, "push, grow, w 50%, h 40%");
+		add(lblLeagueWindow, "center, wrap");
+		add(btnMonitor, "w 50%");
+		add(btnCancel, "w 50%");
 	}
 
 	@Override
 	public void notifySelection(int x, int y, int width, int height) {
-		getTopLevelAncestor().setVisible(true);
-		this.textX = x;
-		this.textY = y;
-		this.textWidth = width;
-		this.textHeight = height;
-
-//		foo();
-		startScreenMonitor();
+		switch(selectionMode){
+		case LEAGUE:
+//			this.leagueX = x;
+//			this.leagueY = y;
+//			this.leagueWidth = width;
+//			this.leagueHeight = height;
+//			prefs.putInt(PrefName.LEAGUE_X.path(), x);
+//			prefs.putInt(PrefName.LEAGUE_Y.path(), y);
+//			prefs.putInt(PrefName.LEAGUE_WIDTH.path(), width);
+//			prefs.putInt(PrefName.LEAGUE_HEIGHT.path(), height);
+//			lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueX, leagueY, leagueWidth, leagueHeight)));
+//			getTopLevelAncestor().setVisible(true);
+			break;
+		case NEXT:
+			break;
+		case NONE:
+			break;
+		case TEXT:
+			this.textX = x;
+			this.textY = y;
+			this.textWidth = width;
+			this.textHeight = height;
+			prefs.putInt(PrefName.TEXT_X.path(), x);
+			prefs.putInt(PrefName.TEXT_Y.path(), y);
+			prefs.putInt(PrefName.TEXT_WIDTH.path(), width);
+			prefs.putInt(PrefName.TEXT_HEIGHT.path(), height);
+			lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
+//			selectionMode = SelectionMode.LEAGUE;
+//			pickArea(this,	"Drag a box around enemy league icon");
+			getTopLevelAncestor().setVisible(true);
+			break;
+		default:
+			break;
 		
+		}
+		
+//		foo();
 	}
 
 	private void pickArea(final SelectionListener selectionListener,
@@ -109,6 +175,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 			@Override
 			public void run() {
 				TextPicker tp = new TextPicker(selectionListener, text);
+				tp.setVisible(true);
 			}
 		});
 	}
@@ -144,14 +211,14 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 	}
 	
 	private void startScreenMonitor(){
-		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.getPathName(), 1), 1);
+		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.path(), 1), 1);
 		
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
 			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
 					0, delaySeconds, TimeUnit.SECONDS);
 			
-			imageCombiner = new ImageCombiner(textX, textY, prefs.getInt(PrefName.IMAGES_PER_PAGE.getPathName(), 9));
+			imageCombiner = new ImageCombiner(textWidth, textHeight, prefs.getInt(PrefName.IMAGES_PER_PAGE.path(), 9));
 		}		
 	}
 	
@@ -160,17 +227,19 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 				&& !screenMonitorHandle.isCancelled()) {
 			System.out.println("Cancelling screen monitor");
 			screenMonitorHandle.cancel(true);
-			for(BufferedImage img : imageCombiner.combine()){
-				saveImageToTif(img);
+			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.path(), false)){
+				for(BufferedImage img : imageCombiner.combine()){
+					saveImageToTif(img);
+				}
 			}
 		}
 		
 	}
 	
 	private void saveImageToTif(BufferedImage binImg) {
-		String path = prefs.get(PrefName.IMAGE_SAVE_PATH.getPathName(), "");
-		String prefix = prefs.get(PrefName.IMAGE_SAVE_PREFIX.getPathName(), "");
-		String language = prefs.get(PrefName.LANGUAGE.getPathName(), "foo");
+		String path = prefs.get(PrefName.IMAGE_SAVE_PATH.path(), "");
+		String prefix = prefs.get(PrefName.IMAGE_SAVE_PREFIX.path(), "");
+		String language = prefs.get(PrefName.LANGUAGE.path(), "foo");
 		if(prefixNameCounters.get(prefix) == null){
 			prefixNameCounters.put(prefix, 0);
 		}
@@ -178,7 +247,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		prefixNameCounters.put(prefix, suffixNum+1);
 		String fullName = path + "\\" + language + "." + prefix + ".exp" + suffixNum + ".tif";
 
-		ImageUtils.saveImageToTiff(binImg, fullName);
+		ImageUtils.saveImageToFile(binImg, fullName, "TIFF");
 		
 	}
 
@@ -186,6 +255,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 		
 		private BufferedImage prevImg;
 		private String prevValues;
+
 		
 		@Override
 		public void run() {
@@ -193,7 +263,6 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 			System.out.println("Monitor running");
 			final BufferedImage img = captureScreen(textX, textY, textWidth,textHeight);
 			final BufferedImage binImg = ImageUtils.erosion(Binarization.getBinarizedImage(img, THRESHOLD));
-//			final BufferedImage binImg = Binarization.getBinarizedImage(img, THRESHOLD);
 			
 			if(bufferedImagesEqual(binImg, prevImg)){
 				System.out.println("Identical image");
@@ -208,16 +277,28 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 			}
 			prevValues = values;
 			
-			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.getPathName(), false)){
+			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.path(), false)){
 				imageCombiner.add(binImg);
-//				saveImageToTif(binImg);
 			}
+			
+//			final BufferedImage leagueImg = captureScreen(leagueX, leagueY, leagueWidth, leagueHeight);
+//			ImageUtils.saveImageToFile(leagueImg, "C:\\Tesseract\\league-images\\league" + count++ + ".png", "PNG");
+//			League closestLeague = null;
+//			try{
+//				closestLeague = ImageUtils.identifyLeague(leagueImg);
+//			} catch (Exception e){
+//				e.printStackTrace();
+//			}
+//			
+//			final String leagueName = closestLeague == null ? "unknown" : closestLeague.toString(); 
 			
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
 					lblMonitorWindow.setIcon(new ImageIcon(img));
 					lblMonitorEnhanceWindow.setIcon(new ImageIcon(binImg));
+//					lblLeagueWindow.setIcon(new ImageIcon(leagueImg));
+//					lblLeagueName.setText("League Name: " + leagueName);
 					textParsedValue.setText(values);
 				}
 			});
@@ -334,6 +415,24 @@ public class CocLoggerPanel extends JPanel implements SelectionListener {
 				frame.setVisible(true);
 			}
 		});
+	}
+
+	@Override
+	public void notify(List<PrefName> changedPrefs) {
+		for(PrefName pref : changedPrefs){
+			switch(pref){
+			case LEAGUE:
+				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(prefs.get(pref.path(), "BRONZEIII")).getImage()));
+				break;
+			case TOWN_HALL_LEVEL:
+				lblTownHallLevel.setText("Town Hall Level " + prefs.getInt(pref.path(), 1));
+				break;
+			default:
+				break;
+			
+			}
+		}
+		
 	}
 
 	

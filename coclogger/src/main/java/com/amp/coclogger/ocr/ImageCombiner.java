@@ -12,7 +12,7 @@ public class ImageCombiner {
 	int width, height;
 	int imagesPerPage;
 	
-	ImageCombiner(int width, int height, int imagesPerPage){
+	public ImageCombiner(int width, int height, int imagesPerPage){
 		this.width = width;
 		this.height = height;
 		
@@ -37,12 +37,16 @@ public class ImageCombiner {
 		int w = width * cols;
 		int h = height * rows;
 		
+		System.out.println(String.format("Printing %d rows of %d columns at (%d x %d, %d x %d per pic)",
+				rows, cols, w, h, width, height ));
+		
 		while(!images.isEmpty()){
 			BufferedImage temp = new BufferedImage(w,h, BufferedImage.TYPE_BYTE_BINARY);
 			Graphics2D g2d = temp.createGraphics();
 			for(int i = 0; i < rows; i++){
 				for(int j = 0; j < cols; j++){
 					BufferedImage img = images.poll();
+					System.out.println(String.format("Drawing img of width %d at location %d", img.getWidth(), width*j));
 					g2d.drawImage(img, null, width*j, height*i);
 					if(images.isEmpty()){
 						imagesToPrint.add(temp);

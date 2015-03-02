@@ -11,20 +11,20 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
 public class CocLogger{
-	private final static Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
 	
 	private final static PreferencesPanel preferencesPanel = new PreferencesPanel();
 	private final static CocLoggerPanel cocLoggerPanel = new CocLoggerPanel();
 	
 	public static void main(String[] args) {
-		int appX = prefs.getInt(PrefName.APP_X.path(), 0);
-		int appY = prefs.getInt(PrefName.APP_Y.path(), 0);
-		int appWidth = prefs.getInt(PrefName.APP_WIDTH.path(), 600);
-		int appHeight = prefs.getInt(PrefName.APP_HEIGHT.path(), 480);
+		int appX = PrefName.APP_X.getInt();
+		int appY = PrefName.APP_Y.getInt();
+		int appWidth = PrefName.APP_WIDTH.getInt();
+		int appHeight = PrefName.APP_HEIGHT.getInt();
 		
 		JFrame frame = new JFrame();
 		frame.setSize(appWidth, appHeight);
@@ -35,6 +35,9 @@ public class CocLogger{
 		
 		frame.setJMenuBar(buildMenuBar());
 		frame.getContentPane().add(cocLoggerPanel);
+		
+		String saveData = PrefName.DATA_SAVE_LOCATION.get();
+		CocData.getInstance().readFile(saveData);
 		
 		preferencesPanel.addListener(cocLoggerPanel);
 		frame.setVisible(true);

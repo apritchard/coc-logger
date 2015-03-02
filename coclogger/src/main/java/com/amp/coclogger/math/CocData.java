@@ -8,27 +8,31 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CocData {
+public enum CocData {
+	INSTANCE;
 	
-	private static String dataLocation;
+	private CocStats cocStats;
+	private List<CocResult> data;
 	
-	private static void setDataLocation(String dataLocation){
-		CocData.dataLocation = dataLocation;
+	public static CocData getInstance(){
+		return INSTANCE;
 	}
 	
-	private static List<CocResult> readFile(){
+	public void readFile(String dataLocation){
 		try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(dataLocation))){
 			@SuppressWarnings("unchecked")
 			List<CocResult> result = (List<CocResult>)ois.readObject();
-			return result;
+			data = result;
+			cocStats = new CocStats(result);
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
-			return new ArrayList<CocResult>();
+			cocStats = new CocStats(new ArrayList<CocResult>());
 		}
 	}
 	
-	private static void writeFile(List<CocResult> data){
+	public void writeFile(String dataLocation){
 		if(dataLocation == null){
+			//TODO
 			dataLocation = "defaultCocData.cocd";
 		}
 		try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(dataLocation))){
@@ -36,6 +40,13 @@ public class CocData {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void addData(CocResult result){
+		if(cocStats == null){
+			throw new IllegalStateException("No File Selected, unable to save data");
+		}
+		cocStats.add(result);
 	}
 	
 

@@ -24,6 +24,7 @@ import boofcv.gui.image.VisualizeImageData;
 import boofcv.struct.feature.Match;
 import boofcv.struct.image.ImageFloat32;
 
+import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.prefs.League;
 
 public class ImageUtils {
@@ -95,9 +96,50 @@ public class ImageUtils {
 		matcher.process(image);
 		List<Match> templates = matcher.getResults().toList();
 		templates.get(0);
+	}
+	
+	public static CocResult parseCocResult(String text, League league, int townhall){
+		String[] lines = text.split(System.getProperty("line.separator"));
+		String goldStr = lines[0].replaceAll("\\s+", "");
+		String elixirStr = lines[1].replaceAll("\\s+", "");
+		String darkElixirStr = lines[3].replaceAll("\\s+", "").isEmpty() ? "0" : lines[2].replaceAll("\\s+", "");
 		
+		int gold = Integer.parseInt(goldStr);
+		int elixir = Integer.parseInt(elixirStr);
+		int darkElixir = Integer.parseInt(darkElixirStr);
 		
-				
+		int maxGe = 0;
+		int maxDe = 0;
+		
+		switch(townhall){
+		case 10:
+			maxGe = 1075000;
+			maxDe = 7600;
+			break;
+		case 9:
+			maxGe = 900000;
+			maxDe = 5400;
+			break;
+		case 8:
+			maxGe = 870000;
+			maxDe = 2650;
+			break;
+		case 7:
+			maxGe = 640000;
+			maxDe = 1100;
+			break;
+		default:
+			maxGe = 520000;
+			maxDe = 1100;
+			break;
+		}
+		
+		if(gold > maxGe || gold < 0 || elixir > maxGe || elixir < 0 || darkElixir > maxDe || darkElixir < 0){
+			System.out.println(String.format("Potentially invalid data g:%d, e:%d, de:%d",gold,elixir,darkElixir));
+			return null;
+		}
+		return new CocResult(gold, elixir, darkElixir, league, townhall);
+		
 	}
 	
 	/**

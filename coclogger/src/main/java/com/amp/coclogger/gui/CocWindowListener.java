@@ -10,7 +10,6 @@ import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
 public class CocWindowListener 	implements WindowListener{
-	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
 	JFrame frame;
 	
 	public CocWindowListener(JFrame frame){
@@ -26,10 +25,10 @@ public class CocWindowListener 	implements WindowListener{
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-		prefs.putInt(PrefName.APP_X.path(), frame.getX());
-		prefs.putInt(PrefName.APP_Y.path(), frame.getY());
-		prefs.putInt(PrefName.APP_WIDTH.path(), frame.getWidth());
-		prefs.putInt(PrefName.APP_HEIGHT.path(), frame.getHeight());
+		PrefName.APP_X.putInt(frame.getX());
+		PrefName.APP_Y.putInt(frame.getY());
+		PrefName.APP_WIDTH.putInt(frame.getWidth());
+		PrefName.APP_HEIGHT.putInt(frame.getHeight());
 		
 	}
 

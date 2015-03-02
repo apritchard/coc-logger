@@ -33,6 +33,8 @@ import net.sourceforge.tess4j.TesseractException;
 import net.sourceforge.vietocr.ImageHelper;
 
 import com.amp.coclogger.external.Binarization;
+import com.amp.coclogger.math.CocData;
+import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.ocr.ImageCombiner;
 import com.amp.coclogger.ocr.ImageUtils;
 import com.amp.coclogger.prefs.League;
@@ -43,8 +45,6 @@ import com.amp.coclogger.prefs.PreferencesPanel;
 public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
 
-	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);
-	
 	private static int count = 0;
 	
 	private ImageCombiner imageCombiner;
@@ -69,14 +69,14 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	public CocLoggerPanel() {
 		super();
 
-		textX = prefs.getInt(PrefName.TEXT_X.path(), 0);
-		textY = prefs.getInt(PrefName.TEXT_Y.path(), 0);
-		textWidth = prefs.getInt(PrefName.TEXT_WIDTH.path(), 1);
-		textHeight = prefs.getInt(PrefName.TEXT_HEIGHT.path(), 1);
-		leagueX = prefs.getInt(PrefName.LEAGUE_X.path(), 0);
-		leagueY = prefs.getInt(PrefName.LEAGUE_Y.path(), 0);
-		leagueWidth = prefs.getInt(PrefName.LEAGUE_WIDTH.path(), 1);
-		leagueHeight = prefs.getInt(PrefName.LEAGUE_HEIGHT.path(), 1);
+		textX = PrefName.TEXT_X.getInt();
+		textY = PrefName.TEXT_Y.getInt();
+		textWidth = PrefName.TEXT_WIDTH.getInt();
+		textHeight = PrefName.TEXT_HEIGHT.getInt();
+//		leagueX = prefs.getInt(PrefName.LEAGUE_X.path(), 0);
+//		leagueY = prefs.getInt(PrefName.LEAGUE_Y.path(), 0);
+//		leagueWidth = prefs.getInt(PrefName.LEAGUE_WIDTH.path(), 1);
+//		leagueHeight = prefs.getInt(PrefName.LEAGUE_HEIGHT.path(), 1);
 		
 		final SelectionListener selectionListener = this;
 		setLayout(new MigLayout());
@@ -107,10 +107,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		lblMonitorWindow = new JLabel("");
 		lblMonitorEnhanceWindow = new JLabel("");
 		lblLeagueWindow = new JLabel("");
-		lblTownHallLevel = new JLabel("Town Hall Level " + prefs.getInt(PrefName.TOWN_HALL_LEVEL.path(), 1));
+		lblTownHallLevel = new JLabel("Town Hall Level " + PrefName.TOWN_HALL_LEVEL.getInt());
 		textParsedValue = new JTextPane();
 		
-		String league = prefs.get(PrefName.LEAGUE.path(), "BRONZEI");
+		String league = PrefName.LEAGUE.get();
 		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
 //		lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueX, leagueY, leagueWidth, leagueHeight)));
 		lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
@@ -152,10 +152,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			this.textY = y;
 			this.textWidth = width;
 			this.textHeight = height;
-			prefs.putInt(PrefName.TEXT_X.path(), x);
-			prefs.putInt(PrefName.TEXT_Y.path(), y);
-			prefs.putInt(PrefName.TEXT_WIDTH.path(), width);
-			prefs.putInt(PrefName.TEXT_HEIGHT.path(), height);
+			PrefName.TEXT_X.putInt(x);
+			PrefName.TEXT_Y.putInt(y);
+			PrefName.TEXT_WIDTH.putInt(width);
+			PrefName.TEXT_HEIGHT.putInt(height);
 			lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
 //			selectionMode = SelectionMode.LEAGUE;
 //			pickArea(this,	"Drag a box around enemy league icon");
@@ -211,14 +211,14 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	}
 	
 	private void startScreenMonitor(){
-		int delaySeconds = Math.max(prefs.getInt(PrefName.MONITOR_DELAY.path(), 1), 1);
+		int delaySeconds = Math.max(PrefName.MONITOR_DELAY.getInt(), 1);
 		
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
 			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
 					0, delaySeconds, TimeUnit.SECONDS);
 			
-			imageCombiner = new ImageCombiner(textWidth, textHeight, prefs.getInt(PrefName.IMAGES_PER_PAGE.path(), 9));
+			imageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
 		}		
 	}
 	
@@ -227,7 +227,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 				&& !screenMonitorHandle.isCancelled()) {
 			System.out.println("Cancelling screen monitor");
 			screenMonitorHandle.cancel(true);
-			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.path(), false)){
+			if(PrefName.IMAGE_SAVE_ACTIVE.getBoolean()){
 				for(BufferedImage img : imageCombiner.combine()){
 					saveImageToTif(img);
 				}
@@ -237,9 +237,9 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	}
 	
 	private void saveImageToTif(BufferedImage binImg) {
-		String path = prefs.get(PrefName.IMAGE_SAVE_PATH.path(), "");
-		String prefix = prefs.get(PrefName.IMAGE_SAVE_PREFIX.path(), "");
-		String language = prefs.get(PrefName.LANGUAGE.path(), "foo");
+		String path = PrefName.IMAGE_SAVE_PATH.get();
+		String prefix = PrefName.IMAGE_SAVE_PREFIX.get();
+		String language = PrefName.LANGUAGE.get();
 		if(prefixNameCounters.get(prefix) == null){
 			prefixNameCounters.put(prefix, 0);
 		}
@@ -277,7 +277,18 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			}
 			prevValues = values;
 			
-			if(prefs.getBoolean(PrefName.IMAGE_SAVE_ACTIVE.path(), false)){
+			try{
+				League league = League.valueOf(PrefName.LEAGUE.get());
+				int townhall = PrefName.LEAGUE.getInt();
+				CocResult result = ImageUtils.parseCocResult(values, league, townhall);
+				CocData cocData = CocData.getInstance();
+				cocData.addData(result);
+			} catch (Exception e){
+				System.out.println("Unable to create data from captured image");
+				e.printStackTrace();
+			}
+			
+			if(PrefName.IMAGE_SAVE_ACTIVE.getBoolean()){
 				imageCombiner.add(binImg);
 			}
 			
@@ -422,10 +433,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		for(PrefName pref : changedPrefs){
 			switch(pref){
 			case LEAGUE:
-				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(prefs.get(pref.path(), "BRONZEIII")).getImage()));
+				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(pref.get()).getImage()));
 				break;
 			case TOWN_HALL_LEVEL:
-				lblTownHallLevel.setText("Town Hall Level " + prefs.getInt(pref.path(), 1));
+				lblTownHallLevel.setText("Town Hall Level " + pref.getInt());
 				break;
 			default:
 				break;

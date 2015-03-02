@@ -50,7 +50,7 @@ public class PreferencesPanel extends JPanel {
 				addCheckbox(prefName);
 				break;
 			case DIRECTORY:
-				addDirectory(prefName);
+				addDirectory(prefName, true);
 				break;
 			case INTEGER:
 				addInteger(prefName);
@@ -60,6 +60,9 @@ public class PreferencesPanel extends JPanel {
 				break;
 			case ENUM_SINGLE:
 				addEnum(prefName);
+				break;
+			case FILE:
+				addDirectory(prefName, false);
 				break;
 			}
 		}
@@ -71,7 +74,7 @@ public class PreferencesPanel extends JPanel {
 				List<PrefName> changedPrefs = new ArrayList<>();
 				for(Entry<JTextField, PrefName> entry : textFields.entrySet()){
 					PrefName p = entry.getValue();
-					String oldT = prefs.get(p.path(), "");
+					String oldT = prefs.get(p.path(), p.defaultString());
 					String newT = entry.getKey().getText();
 					if(!oldT.equals(newT)){
 						prefs.put(p.path(), newT);
@@ -81,7 +84,7 @@ public class PreferencesPanel extends JPanel {
 				
 				for(Entry<JTextField, PrefName> entry : integerFields.entrySet()){
 					PrefName p = entry.getValue();
-					int oldI = prefs.getInt(p.path(), 0);
+					int oldI = prefs.getInt(p.path(), p.defaultInt());
 					int newI = entry.getKey().getText().isEmpty() ? 
 							0 : Integer.parseInt(entry.getKey().getText());
 					if(!(oldI == newI)){
@@ -92,7 +95,7 @@ public class PreferencesPanel extends JPanel {
 				
 				for(Entry<JCheckBox, PrefName> entry : checkBoxes.entrySet()){
 					PrefName p = entry.getValue();
-					boolean oldB = prefs.getBoolean(p.path(), false);
+					boolean oldB = prefs.getBoolean(p.path(), p.defaultBoolean());
 					boolean newB = entry.getKey().isSelected();
 					if(!(oldB == newB)){
 						prefs.putBoolean(p.path(), newB);
@@ -102,7 +105,7 @@ public class PreferencesPanel extends JPanel {
 				
 				for(Entry<JComboBox<String>, PrefName> entry : comboBoxes.entrySet()){
 					PrefName p = entry.getValue();
-					String oldT = prefs.get(p.path(), "");
+					String oldT = prefs.get(p.path(), p.defaultString());
 					String newT = entry.getKey().getSelectedItem().toString();
 					if(!oldT.equals(newT)){
 						prefs.put(p.path(), newT);
@@ -141,7 +144,7 @@ public class PreferencesPanel extends JPanel {
 			for(Enum e : result){
 				enumBox.addItem(e.toString());
 			}
-			enumBox.setSelectedItem(prefs.get(prefName.path(), result[0].toString()));
+			enumBox.setSelectedItem(prefs.get(prefName.path(), prefName.defaultString()));
 			add(new JLabel(prefName.path()));
 			add(enumBox, "w 60%, wrap");
 			comboBoxes.put(enumBox, prefName);
@@ -158,7 +161,7 @@ public class PreferencesPanel extends JPanel {
 	private void addString(PrefName prefName) {
 		add(new JLabel(prefName.path()));
 		JTextField textField = new JTextField();
-		textField.setText(prefs.get(prefName.path(), ""));
+		textField.setText(prefs.get(prefName.path(), prefName.defaultString()));
 		add(textField, "width 60%, wrap");
 		textFields.put(textField, prefName);
 	}
@@ -166,7 +169,7 @@ public class PreferencesPanel extends JPanel {
 	private void addCheckbox(PrefName prefName) {
 		add(new JLabel(prefName.path()));
 		JCheckBox ckbx = new JCheckBox();
-		ckbx.setSelected(prefs.getBoolean(prefName.path(), false));
+		ckbx.setSelected(prefs.getBoolean(prefName.path(), prefName.defaultBoolean()));
 		add(ckbx, "wrap");
 		checkBoxes.put(ckbx, prefName);
 	}
@@ -175,22 +178,22 @@ public class PreferencesPanel extends JPanel {
 		add(new JLabel(prefName.path()));
 		JTextField textField = new JTextField();
 		((PlainDocument)textField.getDocument()).setDocumentFilter(new IntegerFilter());
-		textField.setText("" + prefs.getInt(prefName.path(),  0));
+		textField.setText("" + prefs.getInt(prefName.path(),  prefName.defaultInt()));
 		add(textField, "width 60%, wrap");
 		integerFields.put(textField, prefName);
 	}
 	
-	private void addDirectory(final PrefName prefName){
+	private void addDirectory(final PrefName prefName, final boolean directoryOnly){
 		add(new JLabel(prefName.path()));
 		
 		final JTextField textField = new JTextField();
 		final Component chooserParent = this;
 		
-		textField.setText(prefs.get(prefName.path(), ""));
+		textField.setText(prefs.get(prefName.path(), prefName.defaultString()));
 		textField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				chooseDirectory(textField, prefName, chooserParent);
+				chooseDirectory(textField, prefName, chooserParent, directoryOnly);
 			}
 		});		
 		add(textField, "width 60%");
@@ -199,14 +202,14 @@ public class PreferencesPanel extends JPanel {
 		browseButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				chooseDirectory(textField, prefName, chooserParent);
+				chooseDirectory(textField, prefName, chooserParent, directoryOnly);
 			}
 		});
 		add(browseButton, "wrap");
 		textFields.put(textField, prefName);
 	}
 	
-	private void chooseDirectory(JTextField textField, PrefName prefName, Component chooserParent){
+	private void chooseDirectory(JTextField textField, PrefName prefName, Component chooserParent, boolean directoryOnly){
 		JFileChooser chooser = new JFileChooser();
 		String previousDirectory = textField.getText();
 		if(!previousDirectory.isEmpty()){
@@ -214,9 +217,14 @@ public class PreferencesPanel extends JPanel {
 		} else {
 			chooser.setCurrentDirectory(new File("."));
 		}
-		chooser.setDialogTitle("Select " + prefName.path() + " Directory");
-		chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		chooser.setAcceptAllFileFilterUsed(false);
+		if(directoryOnly){
+			chooser.setDialogTitle("Select " + prefName.path() + " Directory");
+			chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			chooser.setAcceptAllFileFilterUsed(false);
+		} else {
+			chooser.setDialogTitle("Select " + prefName.path() + " File");
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		}
 		
 		if (chooser.showOpenDialog(chooserParent) == JFileChooser.APPROVE_OPTION){
 			textField.setText(chooser.getSelectedFile().getAbsolutePath());

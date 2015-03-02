@@ -99,10 +99,10 @@ public class ImageUtils {
 	}
 	
 	public static CocResult parseCocResult(String text, League league, int townhall){
-		String[] lines = text.split(System.getProperty("line.separator"));
+		String[] lines = text.split("\n");
 		String goldStr = lines[0].replaceAll("\\s+", "");
 		String elixirStr = lines[1].replaceAll("\\s+", "");
-		String darkElixirStr = lines[3].replaceAll("\\s+", "").isEmpty() ? "0" : lines[2].replaceAll("\\s+", "");
+		String darkElixirStr = lines.length < 4 ? "0" : lines[2].replaceAll("\\s+", "");
 		
 		int gold = Integer.parseInt(goldStr);
 		int elixir = Integer.parseInt(elixirStr);
@@ -131,7 +131,6 @@ public class ImageUtils {
 		default:
 			maxGe = 520000;
 			maxDe = 1100;
-			break;
 		}
 		
 		if(gold > maxGe || gold < 0 || elixir > maxGe || elixir < 0 || darkElixir > maxDe || darkElixir < 0){

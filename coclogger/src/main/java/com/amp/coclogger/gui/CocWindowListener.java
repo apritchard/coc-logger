@@ -6,6 +6,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 
+import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
@@ -29,6 +30,8 @@ public class CocWindowListener 	implements WindowListener{
 		PrefName.APP_Y.putInt(frame.getY());
 		PrefName.APP_WIDTH.putInt(frame.getWidth());
 		PrefName.APP_HEIGHT.putInt(frame.getHeight());
+		
+		CocData.getInstance().writeFile(PrefName.DATA_SAVE_LOCATION.get());
 		
 	}
 

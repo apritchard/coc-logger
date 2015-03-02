@@ -1,8 +1,14 @@
 package com.amp.coclogger.math;
 
+import java.io.Serializable;
+
 import com.amp.coclogger.prefs.League;
 
-public class CocResult {
+public class CocResult implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3266970224016024336L;
 	private int gold;
 	private int elixir;
 	private int darkElixir;

@@ -63,7 +63,8 @@ public enum PrefName {
 			int value = Integer.parseInt(defaultValue.toString());
 			return value;
 		} catch (NumberFormatException nfe){
-			System.out.println("Int requested from non-int preference value");
+			nfe.printStackTrace();
+			System.out.println("Int requested from non-int preference value (" + defaultValue + ") on " + toString());
 			return 0;
 		}
 	}
@@ -74,7 +75,7 @@ public enum PrefName {
 		} else if (defaultValue.toString().equalsIgnoreCase("false")){
 			return false;
 		} else {
-			System.out.println("Boolean requested from non-boolean preference value");
+			System.out.println("Boolean requested from non-boolean preference value (" + defaultValue +") on " + toString());
 			return false;
 		}
 	}

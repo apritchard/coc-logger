@@ -279,7 +279,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			
 			try{
 				League league = League.valueOf(PrefName.LEAGUE.get());
-				int townhall = PrefName.LEAGUE.getInt();
+				int townhall = PrefName.TOWN_HALL_LEVEL.getInt();
 				CocResult result = ImageUtils.parseCocResult(values, league, townhall);
 				CocData cocData = CocData.getInstance();
 				cocData.addData(result);

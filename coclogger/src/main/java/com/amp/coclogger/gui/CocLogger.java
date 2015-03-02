@@ -3,7 +3,6 @@ package com.amp.coclogger.gui;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -12,6 +11,8 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import com.amp.coclogger.math.CocData;
+import com.amp.coclogger.math.CocStats;
+import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferencesPanel;
 
@@ -63,6 +64,26 @@ public class CocLogger{
 			}
 		});
 		fileMenu.add(preferencesMenuItem);
+		
+		JMenuItem statisticsMenuItem = new JMenuItem("Statistics", KeyEvent.VK_S);
+		statisticsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.ALT_MASK));
+		statisticsMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Running stats");
+				CocStats stats = CocData.getInstance().getStats();
+				for(League l : League.values()){
+					for(int i = 1 ; i <= 10 ; i++){
+						if(stats.getStat(l, i).getEntries() > 0){
+							System.out.println(l + " as Townhall " + i);
+							System.out.println(stats.getStat(l, i).displayString());
+						}
+					}
+				}
+				
+			}
+		});
+		fileMenu.add(statisticsMenuItem);
 		
 		return menuBar;
 	}

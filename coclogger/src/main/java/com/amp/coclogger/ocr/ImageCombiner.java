@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import com.amp.coclogger.prefs.ImageFileType;
+import com.amp.coclogger.prefs.PrefName;
+
 public class ImageCombiner {
 	private Queue<BufferedImage> images;
 	int width, height;
@@ -40,8 +43,26 @@ public class ImageCombiner {
 		System.out.println(String.format("Printing %d rows of %d columns at (%d x %d, %d x %d per pic)",
 				rows, cols, w, h, width, height ));
 		
+		
+		int biType = BufferedImage.TYPE_3BYTE_BGR;
+		switch(ImageFileType.valueOf(PrefName.IMAGE_FILE_TYPE.get())){
+		case BMP:
+			break;
+		case GIF:
+			break;
+		case JPEG:
+			break;
+		case PNG:
+			break;
+		case TIFF:
+			break;
+		default:
+			break;
+		
+		}
+		
 		while(!images.isEmpty()){
-			BufferedImage temp = new BufferedImage(w,h, BufferedImage.TYPE_BYTE_BINARY);
+			BufferedImage temp = new BufferedImage(w,h, biType);
 			Graphics2D g2d = temp.createGraphics();
 			for(int i = 0; i < rows; i++){
 				for(int j = 0; j < cols; j++){

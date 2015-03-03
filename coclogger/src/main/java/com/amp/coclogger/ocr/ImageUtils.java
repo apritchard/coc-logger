@@ -100,6 +100,10 @@ public class ImageUtils {
 	
 	public static CocResult parseCocResult(String text, League league, int townhall){
 		String[] lines = text.split("\n");
+		if(lines.length < 3){
+			System.out.println("Invalid result");
+			return null;
+		}
 		String goldStr = lines[0].replaceAll("\\s+", "");
 		String elixirStr = lines[1].replaceAll("\\s+", "");
 		String darkElixirStr = lines.length < 4 ? "0" : lines[2].replaceAll("\\s+", "");

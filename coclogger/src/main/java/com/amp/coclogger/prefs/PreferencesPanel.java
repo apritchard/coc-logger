@@ -133,7 +133,7 @@ public class PreferencesPanel extends JPanel {
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void addEnum(PrefName prefName) {
-		String enumClassName = prefToJavaText(prefName.path());
+		String enumClassName = prefToJavaText(prefName.toString());
 		JComboBox<String> enumBox = new JComboBox<String>();
 		try {
 

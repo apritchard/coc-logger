@@ -27,6 +27,10 @@ public class CocStats {
 	}
 	
 	public void add(CocResult result){
+		if(result == null){
+			return;
+		}
+		//TODO fix total
 		CocStat stat = stats.get(result.getPlayerLeague()).get(Integer.valueOf(result.getPlayerTownhall()));
 		stat.addElixir(result.getElixir());
 		stat.addDarkElixir(result.getDarkElixir());

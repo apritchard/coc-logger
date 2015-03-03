@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.prefs.Preferences;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -37,17 +36,18 @@ import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.ocr.ImageCombiner;
 import com.amp.coclogger.ocr.ImageUtils;
+import com.amp.coclogger.prefs.ImageFileType;
 import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferenceListener;
-import com.amp.coclogger.prefs.PreferencesPanel;
 
 public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
 
 	private static int count = 0;
 	
-	private ImageCombiner imageCombiner;
+	private ImageCombiner processedImageCombiner;
+	private ImageCombiner rawImageCombiner;
 	private static Map<String, Integer> prefixNameCounters = new HashMap<>();
 	
 	int textX, textY, textWidth, textHeight;
@@ -218,7 +218,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
 					0, delaySeconds, TimeUnit.SECONDS);
 			
-			imageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
+			processedImageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
+			rawImageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
 		}		
 	}
 	
@@ -227,27 +228,36 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 				&& !screenMonitorHandle.isCancelled()) {
 			System.out.println("Cancelling screen monitor");
 			screenMonitorHandle.cancel(true);
-			if(PrefName.IMAGE_SAVE_ACTIVE.getBoolean()){
-				for(BufferedImage img : imageCombiner.combine()){
-					saveImageToTif(img);
+			if(PrefName.IMAGE_SAVE_PROCESSED.getBoolean()){
+				for(BufferedImage img : processedImageCombiner.combine()){
+					saveImageToFile(img, false, ImageFileType.valueOf(PrefName.IMAGE_FILE_TYPE.get()));
+				}
+			}
+			if(PrefName.IMAGE_SAVE_RAW.getBoolean()){
+				for(BufferedImage img : rawImageCombiner.combine()){
+					saveImageToFile(img, true, ImageFileType.valueOf(PrefName.IMAGE_FILE_TYPE.get()));
 				}
 			}
 		}
 		
 	}
 	
-	private void saveImageToTif(BufferedImage binImg) {
+	private void saveImageToFile(BufferedImage binImg, boolean raw, ImageFileType fileType) {
 		String path = PrefName.IMAGE_SAVE_PATH.get();
 		String prefix = PrefName.IMAGE_SAVE_PREFIX.get();
 		String language = PrefName.LANGUAGE.get();
+		String suffix = raw ? PrefName.RAW_IMAGE_SUFFIX.get() : PrefName.PROCESSED_IMAGE_SUFFIX.get();
+		if(!suffix.isEmpty()){
+			suffix = "." + suffix;
+		}
 		if(prefixNameCounters.get(prefix) == null){
 			prefixNameCounters.put(prefix, 0);
 		}
 		Integer suffixNum = prefixNameCounters.get(prefix);
 		prefixNameCounters.put(prefix, suffixNum+1);
-		String fullName = path + "\\" + language + "." + prefix + ".exp" + suffixNum + ".tif";
+		String fullName = path + "\\" + language + "." + prefix + ".exp" + suffix + suffixNum + "." + fileType.getExtension();
 
-		ImageUtils.saveImageToFile(binImg, fullName, "TIFF");
+		ImageUtils.saveImageToFile(binImg, fullName, fileType.toString());
 		
 	}
 
@@ -271,26 +281,34 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			prevImg = binImg;
 			
 			final String values = readImage(binImg);
-			if(values.equalsIgnoreCase(prevValues)){
-				System.out.println("Same values");
-				return;
+			
+			if (!values.equalsIgnoreCase(prevValues)) {
+
+				try {
+					League league = League.valueOf(PrefName.LEAGUE.get());
+					int townhall = PrefName.TOWN_HALL_LEVEL.getInt();
+					CocResult result = ImageUtils.parseCocResult(values,
+							league, townhall);
+					CocData cocData = CocData.getInstance();
+					cocData.addData(result);
+				} catch (Exception e) {
+					System.out.println("Unable to create data from captured image");
+					e.printStackTrace();
+				}
+			} else {
+				System.out.println("Same values, not logging statistics");
 			}
+			
 			prevValues = values;
 			
-			try{
-				League league = League.valueOf(PrefName.LEAGUE.get());
-				int townhall = PrefName.TOWN_HALL_LEVEL.getInt();
-				CocResult result = ImageUtils.parseCocResult(values, league, townhall);
-				CocData cocData = CocData.getInstance();
-				cocData.addData(result);
-			} catch (Exception e){
-				System.out.println("Unable to create data from captured image");
-				e.printStackTrace();
+			if(PrefName.IMAGE_SAVE_PROCESSED.getBoolean()){
+				processedImageCombiner.add(binImg);
+			}
+			if(PrefName.IMAGE_SAVE_RAW.getBoolean()){
+				rawImageCombiner.add(img);
 			}
 			
-			if(PrefName.IMAGE_SAVE_ACTIVE.getBoolean()){
-				imageCombiner.add(binImg);
-			}
+
 			
 //			final BufferedImage leagueImg = captureScreen(leagueX, leagueY, leagueWidth, leagueHeight);
 //			ImageUtils.saveImageToFile(leagueImg, "C:\\Tesseract\\league-images\\league" + count++ + ".png", "PNG");

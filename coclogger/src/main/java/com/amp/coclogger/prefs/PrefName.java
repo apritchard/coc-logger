@@ -5,13 +5,17 @@ import java.util.prefs.Preferences;
 public enum PrefName {
 	MONITOR_DELAY("monitor-delay", PrefType.INTEGER, 1, true), 
 	LANGUAGE("language", PrefType.STRING, "coc", true), 
-	IMAGE_SAVE_ACTIVE("image-save-active", PrefType.BOOLEAN, false, true),
-	IMAGE_SAVE_PATH("image-save-path", PrefType.DIRECTORY, "", true), 
+	IMAGE_SAVE_RAW("save-raw-image", PrefType.BOOLEAN, false, true),
+	IMAGE_SAVE_PROCESSED("save-processed-image", PrefType.BOOLEAN, false, true),
+	IMAGE_SAVE_PATH("image-save-path", PrefType.DIRECTORY, "", true),
+	DATA_SAVE_LOCATION("data-save-location", PrefType.FILE, "defaultCocData.cocd", true),
 	IMAGE_SAVE_PREFIX("image-save-prefix", PrefType.STRING, "coc_font", true),
+	RAW_IMAGE_SUFFIX("raw-image-suffix", PrefType.STRING, "raw", true),
+	PROCESSED_IMAGE_SUFFIX("processed-image-suffix", PrefType.STRING, "" , true),
+	IMAGE_FILE_TYPE("image-file-type", PrefType.ENUM_SINGLE, ImageFileType.TIFF.toString(), true),
 	IMAGES_PER_PAGE("images-per-page", PrefType.INTEGER, 9, true),
 	TOWN_HALL_LEVEL("townhall-level", PrefType.INTEGER, 5, true),
 	LEAGUE("league", PrefType.ENUM_SINGLE, League.BRONZEIII, true),
-	DATA_SAVE_LOCATION("data-save-location", PrefType.FILE, "defaultCocData.cocd", true),
 	
 	
 	//not editable by users

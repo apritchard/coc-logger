@@ -57,9 +57,9 @@ public class CocLogger{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFrame frame = new JFrame();
-				frame.setSize(400,300);
 				frame.getContentPane().add(preferencesPanel);
 				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.pack();
 				frame.setVisible(true);
 			}
 		});

@@ -20,16 +20,27 @@ public class TextPicker extends JFrame {
 	
 	private SelectionListener selectionListener;
 	
+	public static void main(String[] args) {
+		TextPicker tp = new TextPicker(new SelectionListener() {
+			
+			@Override
+			public void notifySelection(int x, int y, int width, int height) {
+				System.out.println("got it");
+				
+			}
+		}, "Text to display");
+		tp.setVisible(true);
+	}
+	
 	public TextPicker(final SelectionListener selectionListener, String text){
 		setUndecorated(true);
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		int width = gd.getDisplayMode().getWidth();
 		int height = gd.getDisplayMode().getHeight();
 		setSize(width, height);
-		setOpacity(0.1f);
+		setBackground(new Color(0f, 0f, 0f, 0f));
 		
 		DrawPanel drawPanel = new DrawPanel(text);
-		drawPanel.setSize(width, height);
 		add(drawPanel);
 		
 		
@@ -47,11 +58,13 @@ public class TextPicker extends JFrame {
 			JLabel label = new JLabel(text);
 			label.setFont(new Font("Helvetica", Font.PLAIN, 48));
 			label.setForeground(Color.RED);
+			setBackground(new Color(0f, 0f, 0f, 0.1f));
 			add(label, "push, align center");
 		}
 		
 		public void paint(Graphics g){
-			g.setColor(Color.BLACK);
+			super.paint(g);
+			g.setColor(new Color(0f, 0f, 0f, 0.1f));
 			g.fillRect(x1, y1, (x2-x1), (y2-y1));
 		}
 	}

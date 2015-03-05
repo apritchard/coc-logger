@@ -1,22 +1,28 @@
 package com.amp.coclogger.gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import net.miginfocom.swing.MigLayout;
 
 public class TextPicker extends JFrame {
 	
 	private int x1, x2, y1, y2;
+	private int width, height;
 	
 	private SelectionListener selectionListener;
 	
@@ -35,8 +41,8 @@ public class TextPicker extends JFrame {
 	public TextPicker(final SelectionListener selectionListener, String text){
 		setUndecorated(true);
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-		int width = gd.getDisplayMode().getWidth();
-		int height = gd.getDisplayMode().getHeight();
+		width = gd.getDisplayMode().getWidth();
+		height = gd.getDisplayMode().getHeight();
 		setSize(width, height);
 		setBackground(new Color(0f, 0f, 0f, 0f));
 		
@@ -53,19 +59,47 @@ public class TextPicker extends JFrame {
 	class DrawPanel extends JPanel {
 		private static final long serialVersionUID = 1L;
 
+		String text; 
+		
 		public DrawPanel(String text){
-			setLayout(new MigLayout());
-			JLabel label = new JLabel(text);
-			label.setFont(new Font("Helvetica", Font.PLAIN, 48));
-			label.setForeground(Color.RED);
+			this.text = text;
 			setBackground(new Color(0f, 0f, 0f, 0.1f));
-			add(label, "push, align center");
 		}
 		
 		public void paint(Graphics g){
 			super.paint(g);
 			g.setColor(new Color(0f, 0f, 0f, 0.1f));
 			g.fillRect(x1, y1, (x2-x1), (y2-y1));
+			
+			Graphics2D g2d = (Graphics2D) g;
+			FontRenderContext frc = g2d.getFontRenderContext(); 
+			
+			Font font = new Font("Helvetica", Font.BOLD, 62);
+			GlyphVector gv = font.createGlyphVector(frc, text);
+			Rectangle2D box = gv.getVisualBounds();
+			int xOff = width/2 + (int)-box.getX();
+			int yOff = height/2 + (int)-box.getY();
+			Shape shape = gv.getOutline(xOff, yOff);
+			g2d.setClip(shape);
+			g2d.setColor(Color.WHITE);
+			g2d.fill(shape);
+			
+			g2d.setStroke(new BasicStroke(2f));
+			g2d.setColor(Color.BLACK);;
+			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2d.draw(shape);
+			
+//			//https://community.oracle.com/thread/1356303
+//			
+//			g.setColor(Color.WHITE);
+//			TextLayout tl = new TextLayout(text, font, frc);
+//			Shape outline = tl.getOutline(null);
+//			tl.draw(g2d, width/2, height/2);
+//			
+//			g2d.setClip(outline);
+//			g2d.setColor(Color.BLACK);
+//			g2d.fill(outline.getBounds());
+//			
 		}
 	}
 	

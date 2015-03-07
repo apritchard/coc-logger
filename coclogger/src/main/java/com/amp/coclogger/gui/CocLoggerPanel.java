@@ -2,6 +2,7 @@ package com.amp.coclogger.gui;
 
 import java.awt.AWTException;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
@@ -36,6 +37,7 @@ import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.ocr.ImageCombiner;
 import com.amp.coclogger.ocr.ImageUtils;
+import com.amp.coclogger.prefs.Capture;
 import com.amp.coclogger.prefs.ImageFileType;
 import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.PrefName;
@@ -44,8 +46,6 @@ import com.amp.coclogger.prefs.PreferenceListener;
 public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
 
-	private static int count = 0;
-	
 	private ImageCombiner processedImageCombiner;
 	private ImageCombiner rawImageCombiner;
 	private static Map<String, Integer> prefixNameCounters = new HashMap<>();
@@ -81,12 +81,12 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		final SelectionListener selectionListener = this;
 		setLayout(new MigLayout());
 		
-		JButton btnCalibrate = new JButton("Select Monitor Location");
+		JButton btnCalibrate = new JButton("Calibrate Monitor");
 		btnCalibrate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				getTopLevelAncestor().setVisible(false);
-				selectionMode = SelectionMode.TEXT;
-				pickArea(selectionListener,	"Drag a box around resource numbers");
+				ScreenCaptureManager scm = new ScreenCaptureManager(selectionListener);
+				scm.capture();
 			}
 		});
 
@@ -126,58 +126,6 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		add(lblLeagueWindow, "center, wrap");
 		add(btnMonitor, "w 50%");
 		add(btnCancel, "w 50%");
-	}
-
-	@Override
-	public void notifySelection(int x, int y, int width, int height) {
-		switch(selectionMode){
-		case LEAGUE:
-//			this.leagueX = x;
-//			this.leagueY = y;
-//			this.leagueWidth = width;
-//			this.leagueHeight = height;
-//			prefs.putInt(PrefName.LEAGUE_X.path(), x);
-//			prefs.putInt(PrefName.LEAGUE_Y.path(), y);
-//			prefs.putInt(PrefName.LEAGUE_WIDTH.path(), width);
-//			prefs.putInt(PrefName.LEAGUE_HEIGHT.path(), height);
-//			lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueX, leagueY, leagueWidth, leagueHeight)));
-//			getTopLevelAncestor().setVisible(true);
-			break;
-		case NEXT:
-			break;
-		case NONE:
-			break;
-		case TEXT:
-			this.textX = x;
-			this.textY = y;
-			this.textWidth = width;
-			this.textHeight = height;
-			PrefName.TEXT_X.putInt(x);
-			PrefName.TEXT_Y.putInt(y);
-			PrefName.TEXT_WIDTH.putInt(width);
-			PrefName.TEXT_HEIGHT.putInt(height);
-			lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
-//			selectionMode = SelectionMode.LEAGUE;
-//			pickArea(this,	"Drag a box around enemy league icon");
-			getTopLevelAncestor().setVisible(true);
-			break;
-		default:
-			break;
-		
-		}
-		
-//		foo();
-	}
-
-	private void pickArea(final SelectionListener selectionListener,
-			final String text) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				TextPicker tp = new TextPicker(selectionListener, text);
-				tp.setVisible(true);
-			}
-		});
 	}
 
 
@@ -464,5 +412,57 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		
 	}
 
+
+	@Override
+	public void notify(ScreenCaptureManager screenCaptureManager) {
+		getTopLevelAncestor().setVisible(true);
+		for(Capture capture : Capture.values()){
+			switch(capture){
+			case FULL_SCREEN:
+				captureFullScreen(screenCaptureManager.getData(capture, Rectangle.class));
+				break;
+			case NEXT_BUTTON:
+				captureNextButton(screenCaptureManager.getData(capture, Point.class));
+				break;
+			case NUMS:
+				captureNums(screenCaptureManager.getData(capture, Rectangle.class));
+				break;
+			case PLAYER_LEAGUE:
+				capturePlayerLeague(screenCaptureManager.getData(capture, Point.class));
+				break;
+			case SWITCH_TO_COMBAT:
+				break;
+			default:
+				break;
+			
+			}
+		}
+	}
+	
+	private void captureFullScreen(Rectangle r){
+		PrefName.COC_X.putInt(r.x);
+		PrefName.COC_Y.putInt(r.y);
+		PrefName.COC_WIDTH.putInt(r.width);
+		PrefName.COC_HEIGHT.putInt(r.height);
+	}
+	
+	private void captureNextButton(Point p){
+		PrefName.NEXT_X.putInt(p.x);
+		PrefName.NEXT_Y.putInt(p.y);
+	}
+	
+	private void captureNums(Rectangle r){
+		PrefName.TEXT_X.putInt(r.x);
+		PrefName.TEXT_Y.putInt(r.y);
+		PrefName.TEXT_WIDTH.putInt(r.width);
+		PrefName.TEXT_HEIGHT.putInt(r.height);
+	}
+	
+	private void capturePlayerLeague(Point p){
+		PrefName.PLAYER_LEAGUE_X.putInt(p.x - 30);
+		PrefName.PLAYER_LEAGUE_Y.putInt(p.y - 30);
+		PrefName.PLAYER_LEAGUE_WIDTH.putInt(60);
+		PrefName.PLAYER_LEAGUE_HEIGHT.putInt(60);
+	}
 	
 }

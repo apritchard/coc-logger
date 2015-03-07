@@ -13,32 +13,34 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
-import java.awt.font.TextLayout;
 import java.awt.geom.Rectangle2D;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class TextPicker extends JFrame {
+public class SelectionPicker extends JFrame {
 	
 	private int x1, x2, y1, y2;
 	private int width, height;
+	private boolean showRectangle;
 	
-	private SelectionListener selectionListener;
+	private PointListener pointListener;
 	
 	public static void main(String[] args) {
-		TextPicker tp = new TextPicker(new SelectionListener() {
+		SelectionPicker sp = new SelectionPicker(new PointListener() {
 			
 			@Override
 			public void notifySelection(int x, int y, int width, int height) {
 				System.out.println("got it");
 				
 			}
-		}, "Text to display");
-		tp.setVisible(true);
+		}, "Text to display", true);
+		sp.setVisible(true);
 	}
 	
-	public TextPicker(final SelectionListener selectionListener, String text){
+	public SelectionPicker(final PointListener pointListener, String text, boolean showRectangle){
+		this.showRectangle = showRectangle;
+		
 		setUndecorated(true);
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		width = gd.getDisplayMode().getWidth();
@@ -50,7 +52,7 @@ public class TextPicker extends JFrame {
 		add(drawPanel);
 		
 		
-		this.selectionListener = selectionListener;
+		this.pointListener = pointListener;
 		DragBoxAdapter adapter = new DragBoxAdapter();
 		addMouseListener(adapter);
 		addMouseMotionListener(adapter);
@@ -68,8 +70,10 @@ public class TextPicker extends JFrame {
 		
 		public void paint(Graphics g){
 			super.paint(g);
-			g.setColor(new Color(0f, 0f, 0f, 0.1f));
-			g.fillRect(x1, y1, (x2-x1), (y2-y1));
+			if(showRectangle){
+				g.setColor(new Color(0f, 0f, 0f, 0.1f));
+				g.fillRect(x1, y1, (x2-x1), (y2-y1));
+			}
 			
 			Graphics2D g2d = (Graphics2D) g;
 			FontRenderContext frc = g2d.getFontRenderContext(); 
@@ -88,18 +92,6 @@ public class TextPicker extends JFrame {
 			g2d.setColor(Color.BLACK);;
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 			g2d.draw(shape);
-			
-//			//https://community.oracle.com/thread/1356303
-//			
-//			g.setColor(Color.WHITE);
-//			TextLayout tl = new TextLayout(text, font, frc);
-//			Shape outline = tl.getOutline(null);
-//			tl.draw(g2d, width/2, height/2);
-//			
-//			g2d.setClip(outline);
-//			g2d.setColor(Color.BLACK);
-//			g2d.fill(outline.getBounds());
-//			
 		}
 	}
 	
@@ -120,11 +112,7 @@ public class TextPicker extends JFrame {
 			
 			@Override
 			public void mouseReleased(MouseEvent e){
-				int x = Math.min(x1,x2);
-				int y = Math.min(y1, y1);
-				int width = Math.max(x1, x2)-x;
-				int height = Math.max(y1, y2)-y;
-				selectionListener.notifySelection(x, y, width, height);
+				pointListener.notifySelection(Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2));
 				setVisible(false);
 				dispose();
 			}		

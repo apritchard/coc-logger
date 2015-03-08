@@ -1,4 +1,4 @@
-package com.amp.coclogger.gui;
+package com.amp.coclogger.gui.util;
 
 import java.awt.Dimension;
 import java.awt.Point;

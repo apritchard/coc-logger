@@ -1,15 +1,18 @@
-package com.amp.coclogger.gui;
+package com.amp.coclogger.gui.coclogger;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
+import com.amp.coclogger.gui.autonexter.AutoNexter;
+import com.amp.coclogger.gui.util.CocWindowListener;
 import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.math.CocStats;
 import com.amp.coclogger.prefs.League;
@@ -84,6 +87,17 @@ public class CocLogger{
 			}
 		});
 		fileMenu.add(statisticsMenuItem);
+		
+		JMenuItem autoNexterMenuItem = new JMenuItem("Auto Nexter", KeyEvent.VK_A);
+		autoNexterMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ActionEvent.ALT_MASK));
+		autoNexterMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AutoNexter an = new AutoNexter();
+				an.setVisible(true);
+			}
+		});
+		fileMenu.add(autoNexterMenuItem);
 		
 		return menuBar;
 	}

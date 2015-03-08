@@ -40,7 +40,11 @@ public enum PrefName {
 	APP_X("app-x", PrefType.INTEGER, 0, false),
 	APP_Y("app-y", PrefType.INTEGER, 0, false),
 	APP_WIDTH("app-width", PrefType.INTEGER, 640, false),
-	APP_HEIGHT("app-height", PrefType.INTEGER, 480, false);
+	APP_HEIGHT("app-height", PrefType.INTEGER, 480, false),
+	AUTO_X("auto-x", PrefType.INTEGER, 0, false),
+	AUTO_Y("auto-y", PrefType.INTEGER, 0, false),
+	AUTO_WIDTH("auto-width", PrefType.INTEGER, 640, false),
+	AUTO_HEIGHT("auto-height", PrefType.INTEGER, 480, false);
 	
 	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);	
 	

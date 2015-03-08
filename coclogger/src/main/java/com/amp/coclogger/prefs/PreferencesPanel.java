@@ -177,7 +177,7 @@ public class PreferencesPanel extends JPanel {
 	private void addInteger(PrefName prefName){
 		add(new JLabel(prefName.path()));
 		JTextField textField = new JTextField();
-		((PlainDocument)textField.getDocument()).setDocumentFilter(new IntegerFilter());
+		((PlainDocument)textField.getDocument()).setDocumentFilter(new IntegerFilter(0, Integer.MAX_VALUE));
 		textField.setText("" + prefs.getInt(prefName.path(),  prefName.defaultInt()));
 		add(textField, "width 60%, wrap");
 		integerFields.put(textField, prefName);

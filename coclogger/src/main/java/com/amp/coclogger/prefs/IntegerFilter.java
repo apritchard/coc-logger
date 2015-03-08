@@ -6,6 +6,14 @@ import javax.swing.text.Document;
 import javax.swing.text.DocumentFilter;
 
 public class IntegerFilter extends DocumentFilter {
+	
+	int min, max;
+	
+	public IntegerFilter(int min, int max){
+		this.min = min;
+		this.max = max;
+	}
+	
 	@Override
 	public void insertString(FilterBypass fb, int offset, String string,
 			AttributeSet attr) throws BadLocationException {
@@ -24,8 +32,8 @@ public class IntegerFilter extends DocumentFilter {
 
 	private boolean test(String text) {
 		try {
-			Integer.parseInt(text);
-			return true;
+			int x = Integer.parseInt(text);
+			return x > min && x < max;
 		} catch (NumberFormatException e) {
 			return(text.isEmpty());
 		}

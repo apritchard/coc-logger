@@ -1,4 +1,4 @@
-package com.amp.coclogger.gui;
+package com.amp.coclogger.gui.util;
 
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;

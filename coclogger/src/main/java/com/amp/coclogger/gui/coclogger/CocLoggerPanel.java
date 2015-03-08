@@ -1,4 +1,4 @@
-package com.amp.coclogger.gui;
+package com.amp.coclogger.gui.coclogger;
 
 import java.awt.AWTException;
 import java.awt.Dimension;
@@ -37,6 +37,10 @@ import net.sourceforge.tess4j.TesseractException;
 import net.sourceforge.vietocr.ImageHelper;
 
 import com.amp.coclogger.external.Binarization;
+import com.amp.coclogger.gui.autonexter.AutoNexter;
+import com.amp.coclogger.gui.util.ScreenCaptureManager;
+import com.amp.coclogger.gui.util.SelectionListener;
+import com.amp.coclogger.gui.util.SelectionMode;
 import com.amp.coclogger.math.CocData;
 import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.ocr.ImageCombiner;

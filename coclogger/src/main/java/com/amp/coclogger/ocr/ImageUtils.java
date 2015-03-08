@@ -52,27 +52,32 @@ public class ImageUtils {
 		return dil;
 	}
 	
-	public static League identifyLeague(BufferedImage image){
-		BufferedImage enlargedImage = new BufferedImage(image.getWidth()*2, image.getHeight()*2, image.getType());
+	public static double findMatch(BufferedImage large, BufferedImage small){
+		ImageFloat32 if32Large = ConvertBufferedImage.convertFrom(large, (ImageFloat32)null);
+		ImageFloat32 if32Small = ConvertBufferedImage.convertFrom(small, (ImageFloat32)null);
 		
-		AffineTransform at = new AffineTransform();
-		at.scale(2.0, 2.0);
-		AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
-		enlargedImage= scaleOp.filter(image, enlargedImage);
+		TemplateMatching<ImageFloat32> matcher = FactoryTemplateMatching.createMatcher(TemplateScoreType.SUM_DIFF_SQ, ImageFloat32.class);
+		matcher.setTemplate(if32Small, 1);
+		matcher.process(if32Large);
+		double score = matcher.getResults().get(0).score;
+		return score;
+	}
+	
+	public static League identifyLeague(BufferedImage image){
 		
 		TemplateMatching<ImageFloat32> matcher = FactoryTemplateMatching.createMatcher(TemplateScoreType.SUM_DIFF_SQ, ImageFloat32.class);
 		
 
-		League bestLeague = League.BRONZEIII;
+		League bestLeague = League.BRONZE3;
 		double bestScore = Double.NEGATIVE_INFINITY;
 		
-//		ImageFloat32 if32 = ConvertBufferedImage.convertFrom(image, (ImageFloat32)null);
-		ImageFloat32 if32 = ConvertBufferedImage.convertFrom(enlargedImage, (ImageFloat32)null);
+		ImageFloat32 if32 = ConvertBufferedImage.convertFrom(image, (ImageFloat32)null);
 		for(League l : League.values()){
-			showMatchIntensity(if32, l.getImageFloat32(), l.toString());
+//			showMatchIntensity(if32, l.getImageFloat32(), l.toString());
 			System.out.println("Checking " + l);
 			ImageFloat32 template = l.getImageFloat32();
-			matcher.setTemplate(template, 10);
+			if(template == null) continue;
+			matcher.setTemplate(template, 1);
 			matcher.process(if32);
 			for(Match match : matcher.getResults().toList()){
 				System.out.println("Got results: " + match.score + " (old: " + bestScore +")");

@@ -1,6 +1,7 @@
 package com.amp.coclogger.gui;
 
 import java.awt.AWTException;
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -10,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -50,9 +54,9 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	private ImageCombiner rawImageCombiner;
 	private static Map<String, Integer> prefixNameCounters = new HashMap<>();
 	
-	int textX, textY, textWidth, textHeight;
-	int leagueX, leagueY, leagueWidth, leagueHeight;
-
+	Rectangle textRect;
+	Rectangle leagueRect;
+	
 	JLabel lblMonitorWindow;
 	JLabel lblMonitorEnhanceWindow;
 	JLabel lblLeagueWindow;
@@ -68,15 +72,12 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 
 	public CocLoggerPanel() {
 		super();
-
-		textX = PrefName.TEXT_X.getInt();
-		textY = PrefName.TEXT_Y.getInt();
-		textWidth = PrefName.TEXT_WIDTH.getInt();
-		textHeight = PrefName.TEXT_HEIGHT.getInt();
-//		leagueX = prefs.getInt(PrefName.LEAGUE_X.path(), 0);
-//		leagueY = prefs.getInt(PrefName.LEAGUE_Y.path(), 0);
-//		leagueWidth = prefs.getInt(PrefName.LEAGUE_WIDTH.path(), 1);
-//		leagueHeight = prefs.getInt(PrefName.LEAGUE_HEIGHT.path(), 1);
+		textRect = new Rectangle(
+				new Point(		PrefName.TEXT_X.getInt(), 		PrefName.TEXT_Y.getInt()), 
+				new Dimension(	PrefName.TEXT_WIDTH.getInt(), 	PrefName.TEXT_HEIGHT.getInt()));
+		leagueRect = new Rectangle(
+				new Point(		PrefName.ENEMY_LEAGUE_X.getInt(), 		PrefName.ENEMY_LEAGUE_Y.getInt()), 
+				new Dimension(	PrefName.ENEMY_LEAGUE_WIDTH.getInt(), 	PrefName.ENEMY_LEAGUE_HEIGHT.getInt()));
 		
 		final SelectionListener selectionListener = this;
 		setLayout(new MigLayout());
@@ -111,9 +112,9 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		textParsedValue = new JTextPane();
 		
 		String league = PrefName.LEAGUE.get();
-		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
-//		lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueX, leagueY, leagueWidth, leagueHeight)));
-		lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textX, textY, textWidth,textHeight)));
+//		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
+		lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueRect)));
+		lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textRect)));
 		
 		add(btnCalibrate, "w 100%, span 2, wrap");
 		add(new JLabel("Original Image"));
@@ -126,6 +127,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		add(lblLeagueWindow, "center, wrap");
 		add(btnMonitor, "w 50%");
 		add(btnCancel, "w 50%");
+	}
+	
+	private BufferedImage captureScreen(Rectangle r){
+		return captureScreen(r.x, r.y, r.width, r.height);
 	}
 
 
@@ -161,16 +166,46 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	private void startScreenMonitor(){
 		int delaySeconds = Math.max(PrefName.MONITOR_DELAY.getInt(), 1);
 		
+//		try {
+//			bar();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
 		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
 			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
 			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
 					0, delaySeconds, TimeUnit.SECONDS);
 			
-			processedImageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
-			rawImageCombiner = new ImageCombiner(textWidth, textHeight, PrefName.IMAGES_PER_PAGE.getInt());
+			processedImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
+			rawImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
 		}		
 	}
 	
+	private void bar() throws IOException {
+		int x = PrefName.COC_X.getInt();
+		int y = PrefName.COC_Y.getInt();
+		int width = PrefName.COC_WIDTH.getInt();
+		int height = PrefName.COC_HEIGHT.getInt();
+		BufferedImage fullScreen = captureScreen(x, y, width, height);
+		
+		findImage("attack", fullScreen);
+		findImage("end-battle", fullScreen);
+		findImage("find-a-match", fullScreen);
+		findImage("next", fullScreen);
+		findImage("th8", fullScreen);
+		findImage("trophy", fullScreen);
+		
+	}
+	
+	private void findImage(String findable, BufferedImage fullScreen) throws IOException{
+		URL url = ClassLoader.getSystemResource("findables/" + findable + ".png");
+		BufferedImage image = ImageIO.read(url);
+		System.out.println(findable + ": " + ImageUtils.findMatch(fullScreen, image));
+	}
+
+
 	private void cancelScreenMonitor(){
 		if (screenMonitorHandle != null
 				&& !screenMonitorHandle.isCancelled()) {
@@ -208,6 +243,15 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		ImageUtils.saveImageToFile(binImg, fullName, fileType.toString());
 		
 	}
+	
+	private void updateImageLabel(final JLabel label, final BufferedImage img){
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				label.setIcon(new ImageIcon(img));
+			}
+		});
+	}
 
 	class ScreenMonitor implements Runnable {
 		
@@ -219,7 +263,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		public void run() {
 			int THRESHOLD = 190;
 			System.out.println("Monitor running");
-			final BufferedImage img = captureScreen(textX, textY, textWidth,textHeight);
+			final BufferedImage img = captureScreen(textRect);
 			final BufferedImage binImg = ImageUtils.erosion(Binarization.getBinarizedImage(img, THRESHOLD));
 			
 			if(bufferedImagesEqual(binImg, prevImg)){
@@ -258,24 +302,23 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			
 
 			
-//			final BufferedImage leagueImg = captureScreen(leagueX, leagueY, leagueWidth, leagueHeight);
-//			ImageUtils.saveImageToFile(leagueImg, "C:\\Tesseract\\league-images\\league" + count++ + ".png", "PNG");
-//			League closestLeague = null;
-//			try{
-//				closestLeague = ImageUtils.identifyLeague(leagueImg);
-//			} catch (Exception e){
-//				e.printStackTrace();
-//			}
-//			
-//			final String leagueName = closestLeague == null ? "unknown" : closestLeague.toString(); 
+			final BufferedImage leagueImg = captureScreen(leagueRect);
+			League closestLeague = null;
+			try{
+				closestLeague = ImageUtils.identifyLeague(img);
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			
+			final String leagueName = closestLeague == null ? "unknown" : closestLeague.toString(); 
 			
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
 					lblMonitorWindow.setIcon(new ImageIcon(img));
 					lblMonitorEnhanceWindow.setIcon(new ImageIcon(binImg));
-//					lblLeagueWindow.setIcon(new ImageIcon(leagueImg));
-//					lblLeagueName.setText("League Name: " + leagueName);
+					lblLeagueWindow.setIcon(new ImageIcon(leagueImg));
+					lblTownHallLevel.setText("League Name: " + leagueName);
 					textParsedValue.setText(values);
 				}
 			});
@@ -304,13 +347,12 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	}
 
 	private void foo() {
-		System.out.println(String.format("Capturing (%d,%d) %dx%d", textX,
-				textY, textWidth, textHeight));
-		final BufferedImage img = captureScreen(textX, textY, textWidth,
-				textHeight);
+		System.out.println(String.format("Capturing (%d,%d) %dx%d", textRect.x,
+				textRect.y, textRect.width, textRect.height));
+		final BufferedImage img = captureScreen(textRect);
 		final BufferedImage binarizedImg = Binarization.getBinarizedImage(img);
 		final BufferedImage binarizedImg2 = Binarization.getBinarizedImage(img, 180);
-		Image enlargedImg = binarizedImg2.getScaledInstance(textWidth*2, textHeight*2, Image.SCALE_SMOOTH);
+		Image enlargedImg = binarizedImg2.getScaledInstance(textRect.width*2, textRect.height*2, Image.SCALE_SMOOTH);
 		final BufferedImage enlargedBi = new BufferedImage(enlargedImg.getWidth(null), enlargedImg.getHeight(null), BufferedImage.TYPE_BYTE_BINARY);
 		enlargedBi.getGraphics().drawImage(enlargedImg, 0, 0, null);
 		
@@ -358,7 +400,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			@Override
 			public void run() {
 				
-				BufferedImage enlargedBi2 = new BufferedImage(textWidth*2, textHeight*2, BufferedImage.TYPE_BYTE_BINARY);
+				BufferedImage enlargedBi2 = new BufferedImage(textRect.width*2, textRect.height*2, BufferedImage.TYPE_BYTE_BINARY);
 				
 				AffineTransform at = new AffineTransform();
 				at.scale(2.0, 2.0);
@@ -399,7 +441,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		for(PrefName pref : changedPrefs){
 			switch(pref){
 			case LEAGUE:
-				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(pref.get()).getImage()));
+//				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(pref.get()).getImage()));
 				break;
 			case TOWN_HALL_LEVEL:
 				lblTownHallLevel.setText("Town Hall Level " + pref.getInt());
@@ -418,20 +460,20 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		getTopLevelAncestor().setVisible(true);
 		for(Capture capture : Capture.values()){
 			switch(capture){
-			case FULL_SCREEN:
-				captureFullScreen(screenCaptureManager.getData(capture, Rectangle.class));
-				break;
-			case NEXT_BUTTON:
-				captureNextButton(screenCaptureManager.getData(capture, Point.class));
-				break;
+//			case FULL_SCREEN:
+//				captureFullScreen(screenCaptureManager.getData(capture, Rectangle.class));
+//				break;
+//			case NEXT_BUTTON:
+//				captureNextButton(screenCaptureManager.getData(capture, Point.class));
+//				break;
 			case NUMS:
 				captureNums(screenCaptureManager.getData(capture, Rectangle.class));
 				break;
-			case PLAYER_LEAGUE:
-				capturePlayerLeague(screenCaptureManager.getData(capture, Point.class));
-				break;
-			case SWITCH_TO_COMBAT:
-				break;
+//			case PLAYER_LEAGUE:
+//				capturePlayerLeague(screenCaptureManager.getData(capture, Point.class));
+//				break;
+//			case SWITCH_TO_COMBAT:
+//				break;
 			default:
 				break;
 			
@@ -452,10 +494,12 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	}
 	
 	private void captureNums(Rectangle r){
-		PrefName.TEXT_X.putInt(r.x);
-		PrefName.TEXT_Y.putInt(r.y);
-		PrefName.TEXT_WIDTH.putInt(r.width);
-		PrefName.TEXT_HEIGHT.putInt(r.height);
+		textRect = r;
+		PrefName.TEXT_X.putInt(textRect.x);
+		PrefName.TEXT_Y.putInt(textRect.y);
+		PrefName.TEXT_WIDTH.putInt(textRect.width);
+		PrefName.TEXT_HEIGHT.putInt(textRect.height);
+		updateImageLabel(lblMonitorWindow, captureScreen(r));
 	}
 	
 	private void capturePlayerLeague(Point p){

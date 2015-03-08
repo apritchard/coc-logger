@@ -3,6 +3,7 @@ package com.amp.coclogger.math;
 import java.io.Serializable;
 
 import com.amp.coclogger.prefs.League;
+import com.amp.coclogger.prefs.Townhall;
 
 public class CocResult implements Serializable{
 	/**
@@ -13,9 +14,9 @@ public class CocResult implements Serializable{
 	private int elixir;
 	private int darkElixir;
 	private League playerLeague;
-	private int playerTownhall;
+	private Townhall playerTownhall;
 	
-	public CocResult(int gold, int elixir, int darkElixir, League playerLeague, int playerTownhall){
+	public CocResult(int gold, int elixir, int darkElixir, League playerLeague, Townhall playerTownhall){
 		this.gold = gold;
 		this.elixir = elixir;
 		this.darkElixir = darkElixir;
@@ -35,7 +36,7 @@ public class CocResult implements Serializable{
 	public League getPlayerLeague() {
 		return playerLeague;
 	}
-	public int getPlayerTownhall() {
+	public Townhall getPlayerTownhall() {
 		return playerTownhall;
 	}
 }

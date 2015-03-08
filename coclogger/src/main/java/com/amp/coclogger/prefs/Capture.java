@@ -1,16 +1,14 @@
 package com.amp.coclogger.prefs;
 
 public enum Capture {
-//	FULL_SCREEN(CaptureType.RECTANGLE, "Drag a box around the entire clash screen"),
-//	PLAYER_LEAGUE(CaptureType.POINT, "Click your own league icon"),
-//	SWITCH_TO_COMBAT(CaptureType.DELAY, "Switch to the battle screen - Attack->Find A Match, Then press OK"),
-	NUMS(CaptureType.RECTANGLE, "Drag a rectangle around all text below \"Available Loot\", but no icons"){ 
-//	NEXT_BUTTON(CaptureType.POINT, "Click on the \"Next\" button"){
-        @Override
-        public Capture next() {
-            return null; // last capture returns null on "next"
-        };
-	};
+	POSITION_CLASH(CaptureType.DELAY, "Position Clash on your screen with no windows covering it, then press OK"),
+	FULL_SCREEN(CaptureType.RECTANGLE, "Drag a box around the entire clash screen"),
+	PLAYER_LEAGUE(CaptureType.RECTANGLE, "Drag a box around your league icon"),
+	ZOOM_OUT(CaptureType.DELAY, "Zoom all the way out, then press OK"),
+	PLAYER_TOWNHALL(CaptureType.RECTANGLE, "Drag a box around your town hall"),
+	SWITCH_TO_COMBAT(CaptureType.DELAY, "Switch to the battle screen - Attack->Find A Match, then press OK"),
+	NUMS(CaptureType.RECTANGLE, "Drag a box around all text below \"Available Loot\", but not the icons"),
+	NEXT_BUTTON(CaptureType.POINT, "Click on the \"Next\" button");
 
 	
 	CaptureType captureType;
@@ -28,10 +26,5 @@ public enum Capture {
 	public String getHintText() {
 		return hintText;
 	}
-	
-    public Capture next() {
-        // No bounds checking required here, because the last instance overrides
-        return values()[ordinal() + 1];
-    }
 	
 }

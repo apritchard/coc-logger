@@ -46,6 +46,7 @@ import com.amp.coclogger.prefs.ImageFileType;
 import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.PrefName;
 import com.amp.coclogger.prefs.PreferenceListener;
+import com.amp.coclogger.prefs.Townhall;
 
 public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
@@ -86,7 +87,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		btnCalibrate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				getTopLevelAncestor().setVisible(false);
-				ScreenCaptureManager scm = new ScreenCaptureManager(selectionListener);
+				ScreenCaptureManager scm = new ScreenCaptureManager(selectionListener, Arrays.asList(Capture.values()));
 				scm.capture();
 			}
 		});
@@ -108,13 +109,17 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		lblMonitorWindow = new JLabel("");
 		lblMonitorEnhanceWindow = new JLabel("");
 		lblLeagueWindow = new JLabel("");
-		lblTownHallLevel = new JLabel("Town Hall Level " + PrefName.TOWN_HALL_LEVEL.getInt());
+		lblTownHallLevel = new JLabel("Town Hall Level " + PrefName.TOWNHALL.get());
 		textParsedValue = new JTextPane();
 		
 		String league = PrefName.LEAGUE.get();
 //		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
-		lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueRect)));
-		lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textRect)));
+		try{
+			lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueRect)));
+			lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textRect)));
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 		
 		add(btnCalibrate, "w 100%, span 2, wrap");
 		add(new JLabel("Original Image"));
@@ -278,7 +283,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 
 				try {
 					League league = League.valueOf(PrefName.LEAGUE.get());
-					int townhall = PrefName.TOWN_HALL_LEVEL.getInt();
+					Townhall townhall = Townhall.valueOf(PrefName.TOWNHALL.get());
 					CocResult result = ImageUtils.parseCocResult(values,
 							league, townhall);
 					CocData cocData = CocData.getInstance();
@@ -443,8 +448,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			case LEAGUE:
 //				lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(pref.get()).getImage()));
 				break;
-			case TOWN_HALL_LEVEL:
-				lblTownHallLevel.setText("Town Hall Level " + pref.getInt());
+			case TOWNHALL:
+				lblTownHallLevel.setText("Town Hall Level " + pref.get());
 				break;
 			default:
 				break;

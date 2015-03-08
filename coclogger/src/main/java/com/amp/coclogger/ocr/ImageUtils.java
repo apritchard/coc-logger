@@ -1,7 +1,5 @@
 package com.amp.coclogger.ocr;
 
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
@@ -26,6 +24,7 @@ import boofcv.struct.image.ImageFloat32;
 
 import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.prefs.League;
+import com.amp.coclogger.prefs.Townhall;
 
 public class ImageUtils {
 
@@ -103,7 +102,7 @@ public class ImageUtils {
 		templates.get(0);
 	}
 	
-	public static CocResult parseCocResult(String text, League league, int townhall){
+	public static CocResult parseCocResult(String text, League league, Townhall townhall){
 		String[] lines = text.split("\n");
 		if(lines.length < 3){
 			System.out.println("Invalid result");
@@ -121,19 +120,19 @@ public class ImageUtils {
 		int maxDe = 0;
 		
 		switch(townhall){
-		case 10:
+		case TH10:
 			maxGe = 1075000;
 			maxDe = 7600;
 			break;
-		case 9:
+		case TH9:
 			maxGe = 900000;
 			maxDe = 5400;
 			break;
-		case 8:
+		case TH8:
 			maxGe = 870000;
 			maxDe = 2650;
 			break;
-		case 7:
+		case TH7:
 			maxGe = 640000;
 			maxDe = 1100;
 			break;

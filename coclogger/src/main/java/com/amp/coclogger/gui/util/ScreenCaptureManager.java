@@ -100,8 +100,7 @@ public class ScreenCaptureManager implements PointListener {
 		if(capture.getCaptureType().getClazz().equals(clazz)){
 			return clazz.cast(captureMap.get(capture));
 		} else {
-			logger.debug("Attempting to get " + clazz + " from " + capture + " which is " + capture.getCaptureType().getClazz());
-			return null;
+			throw new UnsupportedOperationException("Attempting to get " + clazz + " from " + capture + " which is " + capture.getCaptureType().getClazz());
 		}
 	}
 

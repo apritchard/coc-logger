@@ -24,7 +24,7 @@ public abstract class Parameter  {
 	
 	public void addToPanel(JPanel panel){
 		panel.add(new JLabel(getName()));
-		panel.add(getComponent(), "w 60%, wrap");
+		panel.add(getComponent(), "w 50:100:, push, grow, wrap");
 	}
 	
 	public String getName() {

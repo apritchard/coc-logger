@@ -16,12 +16,12 @@ import org.apache.log4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class ParameterForm extends JPanel {
+public class ParameterPanel extends JPanel {
 	private static final Preferences prefs = Preferences.userNodeForPackage(Parameter.class);
 	private static final String PARM_PREF = "saved-parameters"; 
-	private static final Logger logger = Logger.getLogger(ParameterForm.class);
+	private static final Logger logger = Logger.getLogger(ParameterPanel.class);
 
-	public ParameterForm(String formName, List<Parameter> parameters) {
+	public ParameterPanel(String formName, List<Parameter> parameters) {
 
 		setLayout(new MigLayout());
 

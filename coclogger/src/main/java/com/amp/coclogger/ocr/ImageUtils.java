@@ -1,5 +1,8 @@
 package com.amp.coclogger.ocr;
 
+import java.awt.AWTException;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
@@ -10,6 +13,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
 import boofcv.alg.feature.detect.template.TemplateMatching;
 import boofcv.alg.feature.detect.template.TemplateMatchingIntensity;
 import boofcv.alg.misc.ImageStatistics;
@@ -22,6 +27,7 @@ import boofcv.gui.image.VisualizeImageData;
 import boofcv.struct.feature.Match;
 import boofcv.struct.image.ImageFloat32;
 
+import com.amp.coclogger.external.Binarization;
 import com.amp.coclogger.math.CocResult;
 import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.Townhall;
@@ -62,10 +68,13 @@ public class ImageUtils {
 		return score;
 	}
 	
+	public static int getLumosity(BufferedImage image){
+		return Binarization.otsuThreshold(image);
+	}
+	
 	public static League identifyLeague(BufferedImage image){
 		
 		TemplateMatching<ImageFloat32> matcher = FactoryTemplateMatching.createMatcher(TemplateScoreType.SUM_DIFF_SQ, ImageFloat32.class);
-		
 
 		League bestLeague = League.BRONZE3;
 		double bestScore = Double.NEGATIVE_INFINITY;
@@ -89,7 +98,29 @@ public class ImageUtils {
 		}
 		
 		return bestLeague;
-			
+	}
+	
+	public static String readImage(Rectangle r){
+		return readImage(captureScreen(r));
+	}
+	
+	public static String readImage(int x, int y, int width, int height){
+		return readImage(captureScreen(x, y, width, height));
+	}
+	
+	public static String readImage(BufferedImage bi) {
+		Tesseract tess = Tesseract.getInstance();
+		tess.setConfigs(Arrays.asList(new String[] { "digits" }));
+		tess.setPageSegMode(6);
+		tess.setLanguage("coc");
+
+		try {
+			String text = tess.doOCR(bi);
+			return text;
+		} catch (TesseractException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public static void convolve(BufferedImage small, BufferedImage large){
@@ -100,6 +131,24 @@ public class ImageUtils {
 		matcher.process(image);
 		List<Match> templates = matcher.getResults().toList();
 		templates.get(0);
+	}
+	
+
+	public static BufferedImage captureScreen(Rectangle r){
+		return captureScreen(r.x, r.y, r.width, r.height);
+	}
+
+
+	public static BufferedImage captureScreen(int x, int y, int width, int height) {
+		try {
+			Robot robot = new Robot();
+			Rectangle screenRectangle = new Rectangle(x, y, width, height);
+			BufferedImage image = robot.createScreenCapture(screenRectangle);
+			return image;
+		} catch (AWTException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Unable to capture screen");
+		}
 	}
 	
 	public static CocResult parseCocResult(String text, League league, Townhall townhall){

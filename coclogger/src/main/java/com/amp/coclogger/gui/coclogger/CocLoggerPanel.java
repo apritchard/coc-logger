@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -32,12 +31,9 @@ import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
 import net.sourceforge.vietocr.ImageHelper;
 
 import com.amp.coclogger.external.Binarization;
-import com.amp.coclogger.gui.autonexter.AutoNexter;
 import com.amp.coclogger.gui.util.ScreenCaptureManager;
 import com.amp.coclogger.gui.util.SelectionListener;
 import com.amp.coclogger.gui.util.SelectionMode;
@@ -119,8 +115,8 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		String league = PrefName.LEAGUE.get();
 //		lblLeagueWindow.setIcon(new ImageIcon(League.valueOf(league).getImage()));
 		try{
-			lblLeagueWindow.setIcon(new ImageIcon(captureScreen(leagueRect)));
-			lblMonitorWindow.setIcon(new ImageIcon(captureScreen(textRect)));
+			lblLeagueWindow.setIcon(new ImageIcon(ImageUtils.captureScreen(leagueRect)));
+			lblMonitorWindow.setIcon(new ImageIcon(ImageUtils.captureScreen(textRect)));
 		} catch (Exception e){
 			e.printStackTrace();
 		}
@@ -138,40 +134,6 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		add(btnCancel, "w 50%");
 	}
 	
-	private BufferedImage captureScreen(Rectangle r){
-		return captureScreen(r.x, r.y, r.width, r.height);
-	}
-
-
-	private BufferedImage captureScreen(int x, int y, int width, int height) {
-		try {
-			Robot robot = new Robot();
-			Rectangle screenRectangle = new Rectangle(x, y, width, height);
-			BufferedImage image = robot.createScreenCapture(screenRectangle);
-			return image;
-		} catch (AWTException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Unable to capture screen");
-		}
-	}
-
-	public String readImage(BufferedImage bi) {
-
-		Tesseract tess = Tesseract.getInstance();
-		tess.setConfigs(Arrays.asList(new String[] { "digits" }));
-		tess.setPageSegMode(6);
-		tess.setLanguage("coc");
-
-		try {
-			String text = tess.doOCR(bi);
-			return text;
-		} catch (TesseractException e) {
-			e.printStackTrace();
-		}
-		return "Error parsing image";
-
-	}
-	
 	private void startScreenMonitor(){
 		int delaySeconds = Math.max(PrefName.MONITOR_DELAY.getInt(), 1);
 		
@@ -181,15 +143,15 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		
-		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
-			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
-			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
-					0, delaySeconds, TimeUnit.SECONDS);
-			
-			processedImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
-			rawImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
-		}		
+		baz();
+//		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
+//			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
+//			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
+//					0, delaySeconds, TimeUnit.SECONDS);
+//			
+//			processedImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
+//			rawImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
+//		}		
 	}
 	
 	private void bar() throws IOException {
@@ -197,7 +159,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		int y = PrefName.COC_Y.getInt();
 		int width = PrefName.COC_WIDTH.getInt();
 		int height = PrefName.COC_HEIGHT.getInt();
-		BufferedImage fullScreen = captureScreen(x, y, width, height);
+		BufferedImage fullScreen = ImageUtils.captureScreen(x, y, width, height);
 		
 		findImage("attack", fullScreen);
 		findImage("end-battle", fullScreen);
@@ -206,6 +168,22 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		findImage("th8", fullScreen);
 		findImage("trophy", fullScreen);
 		
+	}
+	
+	private void baz(){
+		int x = PrefName.TEXT_X.getInt();
+		int y = PrefName.TEXT_Y.getInt();
+		int width = PrefName.TEXT_WIDTH.getInt();
+		int height = PrefName.TEXT_HEIGHT.getInt();
+		final BufferedImage resources = ImageUtils.captureScreen(x, y, width, height);
+		System.out.println("Threshold of text view: " + ImageUtils.getLumosity(resources));
+		
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				lblMonitorWindow.setIcon(new ImageIcon(resources));
+			}
+		});
 	}
 	
 	private void findImage(String findable, BufferedImage fullScreen) throws IOException{
@@ -272,7 +250,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		public void run() {
 			int THRESHOLD = 190;
 			System.out.println("Monitor running");
-			final BufferedImage img = captureScreen(textRect);
+			final BufferedImage img = ImageUtils.captureScreen(textRect);
 			final BufferedImage binImg = ImageUtils.erosion(Binarization.getBinarizedImage(img, THRESHOLD));
 			
 			if(bufferedImagesEqual(binImg, prevImg)){
@@ -281,7 +259,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			}
 			prevImg = binImg;
 			
-			final String values = readImage(binImg);
+			final String values = ImageUtils.readImage(binImg);
 			
 			if (!values.equalsIgnoreCase(prevValues)) {
 
@@ -311,7 +289,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			
 
 			
-			final BufferedImage leagueImg = captureScreen(leagueRect);
+			final BufferedImage leagueImg = ImageUtils.captureScreen(leagueRect);
 			League closestLeague = null;
 			try{
 				closestLeague = ImageUtils.identifyLeague(img);
@@ -358,7 +336,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	private void foo() {
 		System.out.println(String.format("Capturing (%d,%d) %dx%d", textRect.x,
 				textRect.y, textRect.width, textRect.height));
-		final BufferedImage img = captureScreen(textRect);
+		final BufferedImage img = ImageUtils.captureScreen(textRect);
 		final BufferedImage binarizedImg = Binarization.getBinarizedImage(img);
 		final BufferedImage binarizedImg2 = Binarization.getBinarizedImage(img, 180);
 		Image enlargedImg = binarizedImg2.getScaledInstance(textRect.width*2, textRect.height*2, Image.SCALE_SMOOTH);
@@ -383,11 +361,11 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		
 		final BufferedImage idi1 = ImageUtils.erosion(i2);
 		
-		String nums = readImage(img);
+		String nums = ImageUtils.readImage(img);
 		System.out.println("Text: " + nums);
 //		System.out.println("BinarText: " + readImage(binarizedImg));
-		System.out.println("BinarText2: " + readImage(binarizedImg2));
-		System.out.println("Enlarged: " + readImage(enlargedBi));
+		System.out.println("BinarText2: " + ImageUtils.readImage(binarizedImg2));
+		System.out.println("Enlarged: " + ImageUtils.readImage(enlargedBi));
 //		System.out.println("bi3: " + readImage(bi3));
 //		System.out.println("gs1: " + readImage(gs1));
 //		System.out.println("ebi1: " + readImage(ebi1));
@@ -395,13 +373,13 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 //		System.out.println("i1: " + readImage(i1));
 //		System.out.println("i2: " + readImage(i2));
 		
-		System.out.println("di1: " + readImage(di1));
+		System.out.println("di1: " + ImageUtils.readImage(di1));
 //		System.out.println("di2: " + readImage(di2));
 //		System.out.println("di3: " + readImage(di3));
-		System.out.println("bi1: " + readImage(bdi1));
+		System.out.println("bi1: " + ImageUtils.readImage(bdi1));
 //		System.out.println("bdi2: " + readImage(bdi2));
 //		System.out.println("bdi3: " + readImage(bdi3));
-		System.out.println("idi1: " + readImage(idi1));
+		System.out.println("idi1: " + ImageUtils.readImage(idi1));
 
 
 		SwingUtilities.invokeLater(new Runnable() {
@@ -415,7 +393,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 				at.scale(2.0, 2.0);
 				AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
 				enlargedBi2 = scaleOp.filter(binarizedImg2, enlargedBi2);
-				System.out.println("Enlarged2: " + readImage(enlargedBi2));
+				System.out.println("Enlarged2: " + ImageUtils.readImage(enlargedBi2));
 				
 				JPanel panel = new JPanel();
 				panel.add(new JLabel(new ImageIcon(img)));
@@ -469,27 +447,51 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		getTopLevelAncestor().setVisible(true);
 		for(Capture capture : Capture.values()){
 			switch(capture){
-//			case FULL_SCREEN:
-//				captureFullScreen(screenCaptureManager.getData(capture, Rectangle.class));
-//				break;
-//			case NEXT_BUTTON:
-//				captureNextButton(screenCaptureManager.getData(capture, Point.class));
-//				break;
+			case FULL_SCREEN:
+				captureFullScreen(screenCaptureManager.getData(capture, Rectangle.class));
+				break;
+			case NEXT_BUTTON:
+				captureNextButton(screenCaptureManager.getData(capture, Point.class));
+				break;
 			case NUMS:
 				captureNums(screenCaptureManager.getData(capture, Rectangle.class));
 				break;
-//			case PLAYER_LEAGUE:
-//				capturePlayerLeague(screenCaptureManager.getData(capture, Point.class));
-//				break;
-//			case SWITCH_TO_COMBAT:
-//				break;
-			default:
+			case PLAYER_LEAGUE:
+				capturePlayerLeague(screenCaptureManager.getData(capture, Rectangle.class));
 				break;
-			
+			case ATTACK_ICON:
+				captureAttackIcon(screenCaptureManager.getData(capture, Point.class));
+				break;
+			case FIND_A_MATCH_ICON:
+				captureFindAMatchIcon(screenCaptureManager.getData(capture, Point.class));
+				break;
+			case PLAYER_TOWNHALL:
+				capturePlayerTownhall(screenCaptureManager.getData(capture, Rectangle.class));
+				break;
+			case POSITION_CLASH:
+				break;
 			}
 		}
 	}
 	
+	
+	private void capturePlayerTownhall(Rectangle r) {
+		PrefName.PLAYER_TH_X.putInt(r.x);
+		PrefName.PLAYER_TH_Y.putInt(r.y);
+		PrefName.PLAYER_TH_WIDTH.putInt(r.width);
+		PrefName.PLAYER_TH_HEIGHT.putInt(r.height);	
+	}
+
+	private void captureFindAMatchIcon(Point p) {
+		PrefName.FIND_X.putInt(p.x);
+		PrefName.FIND_Y.putInt(p.y);
+	}
+
+	private void captureAttackIcon(Point p) {
+		PrefName.ATTACK_X.putInt(p.x);
+		PrefName.ATTACK_Y.putInt(p.y);		
+	}
+
 	private void captureFullScreen(Rectangle r){
 		PrefName.COC_X.putInt(r.x);
 		PrefName.COC_Y.putInt(r.y);
@@ -508,14 +510,14 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		PrefName.TEXT_Y.putInt(textRect.y);
 		PrefName.TEXT_WIDTH.putInt(textRect.width);
 		PrefName.TEXT_HEIGHT.putInt(textRect.height);
-		updateImageLabel(lblMonitorWindow, captureScreen(r));
+		updateImageLabel(lblMonitorWindow, ImageUtils.captureScreen(r));
 	}
 	
-	private void capturePlayerLeague(Point p){
-		PrefName.PLAYER_LEAGUE_X.putInt(p.x - 30);
-		PrefName.PLAYER_LEAGUE_Y.putInt(p.y - 30);
-		PrefName.PLAYER_LEAGUE_WIDTH.putInt(60);
-		PrefName.PLAYER_LEAGUE_HEIGHT.putInt(60);
+	private void capturePlayerLeague(Rectangle r){
+		PrefName.PLAYER_LEAGUE_X.putInt(r.x);
+		PrefName.PLAYER_LEAGUE_Y.putInt(r.y);
+		PrefName.PLAYER_LEAGUE_WIDTH.putInt(r.width);
+		PrefName.PLAYER_LEAGUE_HEIGHT.putInt(r.height);
 	}
 	
 }

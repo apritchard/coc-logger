@@ -6,16 +6,28 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import net.miginfocom.swing.MigLayout;
+
 import com.amp.coclogger.prefs.PrefName;
 
 public class AutoNexter extends JFrame {
+	
+	final String PARAM_ELIXIR = "Minimum elixir";
+	final String PARAM_GOLD = "Minimum gold";
+	final String PARAM_DARK_ELIXIR = "Dark elixir";
+	final String PARAM_TROPHIES_WIN = "Trophies win";
+	final String PARAM_TROPHIES_LOSE = "Trophies lose";
+	final String PARAM_DELAY = "Next delay";
 
 	public AutoNexter(){
-		Parameter elixir = new IntegerParameter("Minimum elixir", 0, 2000000);
-		Parameter gold = new IntegerParameter("Minimum gold", 0, 2000000);
-		Parameter darkElixir = new IntegerParameter("Dark elixir", 0, 5000);
-		Parameter trophiesWin = new IntegerParameter("Trophies win", 0, 50);
-		Parameter trophiesLose = new IntegerParameter("Trophies lose", 0, 50);
+		addWindowListener(new NexterWindowListener(this));
+		
+		Parameter elixir = new IntegerParameter(PARAM_ELIXIR, 0, 2000000);
+		Parameter gold = new IntegerParameter(PARAM_GOLD, 0, 2000000);
+		Parameter darkElixir = new IntegerParameter(PARAM_DARK_ELIXIR, 0, 5000);
+		Parameter trophiesWin = new IntegerParameter(PARAM_TROPHIES_WIN, 0, 50);
+		Parameter trophiesLose = new IntegerParameter(PARAM_TROPHIES_LOSE, 0, 50);
+		Parameter delay = new IntegerParameter(PARAM_DELAY, 1, 30);
 		
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(elixir);
@@ -23,9 +35,12 @@ public class AutoNexter extends JFrame {
 		parameters.add(darkElixir);
 		parameters.add(trophiesWin);
 		parameters.add(trophiesLose);
+		parameters.add(delay);
 		
-		JPanel parmForm = new ParameterForm("AutoNext Parameters", parameters);
+		JPanel parmForm = new ParameterPanel("AutoNext Parameters", parameters);
+		getContentPane().setLayout(new MigLayout());
 		getContentPane().add(parmForm);
+		getContentPane().add(new NexterPanel(parameters));
 		pack();
 		
 		int appX = PrefName.AUTO_X.getInt();
@@ -33,9 +48,8 @@ public class AutoNexter extends JFrame {
 		int appWidth = PrefName.AUTO_WIDTH.getInt();
 		int appHeight = PrefName.AUTO_HEIGHT.getInt();
 		
-		JFrame frame = new JFrame();
-		frame.setSize(appWidth, appHeight);
-		frame.setLocation(appX, appY);
-		frame.setTitle("AutoNexter");
+		setSize(appWidth, appHeight);
+		setLocation(appX, appY);
+		setTitle("AutoNexter");
 	}
 }

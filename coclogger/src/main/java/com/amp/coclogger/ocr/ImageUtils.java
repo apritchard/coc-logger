@@ -13,6 +13,8 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import org.apache.log4j.Logger;
+
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 import boofcv.alg.feature.detect.template.TemplateMatching;
@@ -33,6 +35,7 @@ import com.amp.coclogger.prefs.League;
 import com.amp.coclogger.prefs.Townhall;
 
 public class ImageUtils {
+	private static final Logger logger = Logger.getLogger(ImageUtils.class);
 
 	public static void saveImageToFile(BufferedImage bi, String path, String type) {
 		File file = new File(path);
@@ -82,17 +85,17 @@ public class ImageUtils {
 		ImageFloat32 if32 = ConvertBufferedImage.convertFrom(image, (ImageFloat32)null);
 		for(League l : League.values()){
 //			showMatchIntensity(if32, l.getImageFloat32(), l.toString());
-			System.out.println("Checking " + l);
+			logger.info("Checking " + l);
 			ImageFloat32 template = l.getImageFloat32();
 			if(template == null) continue;
 			matcher.setTemplate(template, 1);
 			matcher.process(if32);
 			for(Match match : matcher.getResults().toList()){
-				System.out.println("Got results: " + match.score + " (old: " + bestScore +")");
+				logger.info("Got results: " + match.score + " (old: " + bestScore +")");
 				if(match.score > bestScore){
 					bestLeague = l;
 					bestScore = match.score;
-					System.out.println("Better match: " + l + " score: " + bestScore);
+					logger.info("Better match: " + l + " score: " + bestScore);
 				}
 			}
 		}
@@ -154,7 +157,7 @@ public class ImageUtils {
 	public static CocResult parseCocResult(String text, League league, Townhall townhall){
 		String[] lines = text.split("\n");
 		if(lines.length < 3){
-			System.out.println("Invalid result");
+			logger.info("Invalid result");
 			return null;
 		}
 		String goldStr = lines[0].replaceAll("\\s+", "");
@@ -191,7 +194,7 @@ public class ImageUtils {
 		}
 		
 		if(gold > maxGe || gold < 0 || elixir > maxGe || elixir < 0 || darkElixir > maxDe || darkElixir < 0){
-			System.out.println(String.format("Potentially invalid data g:%d, e:%d, de:%d",gold,elixir,darkElixir));
+			logger.info(String.format("Potentially invalid data g:%d, e:%d, de:%d",gold,elixir,darkElixir));
 			return null;
 		}
 		return new CocResult(gold, elixir, darkElixir, league, townhall);

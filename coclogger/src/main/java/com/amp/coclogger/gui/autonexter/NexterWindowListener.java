@@ -5,9 +5,12 @@ import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
 
+import org.apache.log4j.Logger;
+
 import com.amp.coclogger.prefs.PrefName;
 
 public class NexterWindowListener implements WindowListener {
+	private static final Logger logger = Logger.getLogger(NexterWindowListener.class);
 	
 	private JFrame frame;
 	
@@ -23,7 +26,7 @@ public class NexterWindowListener implements WindowListener {
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-		System.out.println(String.format("Saving location %d,%d %dx%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
+		logger.debug(String.format("Saving location %d,%d %dx%d", frame.getX(), frame.getY(), frame.getWidth(), frame.getHeight()));
 		PrefName.AUTO_X.putInt(frame.getX());
 		PrefName.AUTO_Y.putInt(frame.getY());
 		PrefName.AUTO_WIDTH.putInt(frame.getWidth());

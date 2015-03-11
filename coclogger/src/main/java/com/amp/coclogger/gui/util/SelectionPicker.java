@@ -18,7 +18,11 @@ import java.awt.geom.Rectangle2D;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.apache.log4j.Logger;
+
 public class SelectionPicker extends JFrame {
+	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(SelectionPicker.class);
 	
 	private int x1, x2, y1, y2;
 	private int width, height;
@@ -31,7 +35,7 @@ public class SelectionPicker extends JFrame {
 			
 			@Override
 			public void notifySelection(int x, int y, int width, int height) {
-				System.out.println("got it");
+				logger.info("got it");
 				
 			}
 		}, "Text to display", true);

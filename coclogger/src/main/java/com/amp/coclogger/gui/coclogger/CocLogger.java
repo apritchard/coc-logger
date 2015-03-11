@@ -4,12 +4,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
+
+import org.apache.log4j.Logger;
 
 import com.amp.coclogger.gui.autonexter.AutoNexter;
 import com.amp.coclogger.gui.util.CocWindowListener;
@@ -21,6 +22,7 @@ import com.amp.coclogger.prefs.PreferencesPanel;
 
 public class CocLogger{
 	
+	private final static Logger logger = Logger.getLogger(CocLogger.class);
 	private final static PreferencesPanel preferencesPanel = new PreferencesPanel();
 	private final static CocLoggerPanel cocLoggerPanel = new CocLoggerPanel();
 	
@@ -73,13 +75,13 @@ public class CocLogger{
 		statisticsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Running stats");
+				logger.info("Running stats");
 				CocStats stats = CocData.getInstance().getStats();
 				for(League l : League.values()){
 					for(int i = 1 ; i <= 10 ; i++){
 						if(stats.getStat(l, i).getEntries() > 0){
-							System.out.println(l + " as Townhall " + i);
-							System.out.println(stats.getStat(l, i).displayString());
+							logger.info(l + " as Townhall " + i);
+							logger.info(stats.getStat(l, i).displayString());
 						}
 					}
 				}

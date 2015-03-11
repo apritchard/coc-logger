@@ -2,6 +2,10 @@ package com.amp.coclogger.prefs;
 
 import java.util.prefs.Preferences;
 
+import org.apache.log4j.Logger;
+
+import com.amp.coclogger.ocr.ImageCombiner;
+
 public enum PrefName {
 	MONITOR_DELAY("monitor-delay", PrefType.INTEGER, 1, true), 
 	LANGUAGE("language", PrefType.STRING, "coc", true), 
@@ -55,6 +59,7 @@ public enum PrefName {
 	AUTO_HEIGHT("auto-height", PrefType.INTEGER, 480, false);
 	
 	private static final Preferences prefs = Preferences.userNodeForPackage(PreferencesPanel.class);	
+	private static final Logger logger = Logger.getLogger(PrefName.class);
 	
 	private String pathName; 
 	private PrefType type;
@@ -90,7 +95,7 @@ public enum PrefName {
 			return value;
 		} catch (NumberFormatException nfe){
 			nfe.printStackTrace();
-			System.out.println("Int requested from non-int preference value (" + defaultValue + ") on " + toString());
+			logger.info("Int requested from non-int preference value (" + defaultValue + ") on " + toString());
 			return 0;
 		}
 	}
@@ -101,7 +106,7 @@ public enum PrefName {
 		} else if (defaultValue.toString().equalsIgnoreCase("false")){
 			return false;
 		} else {
-			System.out.println("Boolean requested from non-boolean preference value (" + defaultValue +") on " + toString());
+			logger.info("Boolean requested from non-boolean preference value (" + defaultValue +") on " + toString());
 			return false;
 		}
 	}

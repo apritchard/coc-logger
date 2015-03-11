@@ -1,11 +1,9 @@
 package com.amp.coclogger.gui.coclogger;
 
-import java.awt.AWTException;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
@@ -33,6 +31,8 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.swing.MigLayout;
 import net.sourceforge.vietocr.ImageHelper;
 
+import org.apache.log4j.Logger;
+
 import com.amp.coclogger.external.Binarization;
 import com.amp.coclogger.gui.util.ScreenCaptureManager;
 import com.amp.coclogger.gui.util.SelectionListener;
@@ -50,6 +50,7 @@ import com.amp.coclogger.prefs.Townhall;
 
 public class CocLoggerPanel extends JPanel implements SelectionListener, PreferenceListener {
 	private static final long serialVersionUID = 1L;
+	private static final Logger logger = Logger.getLogger(CocLoggerPanel.class);
 
 	private ImageCombiner processedImageCombiner;
 	private ImageCombiner rawImageCombiner;
@@ -145,7 +146,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 //		}
 		baz();
 //		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
-//			System.out.println("Starting new monitor with delay of " + delaySeconds + " seconds");
+//			logger.info("Starting new monitor with delay of " + delaySeconds + " seconds");
 //			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
 //					0, delaySeconds, TimeUnit.SECONDS);
 //			
@@ -176,7 +177,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		int width = PrefName.TEXT_WIDTH.getInt();
 		int height = PrefName.TEXT_HEIGHT.getInt();
 		final BufferedImage resources = ImageUtils.captureScreen(x, y, width, height);
-		System.out.println("Threshold of text view: " + ImageUtils.getLumosity(resources));
+		logger.info("Threshold of text view: " + ImageUtils.getLumosity(resources));
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -189,14 +190,14 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	private void findImage(String findable, BufferedImage fullScreen) throws IOException{
 		URL url = ClassLoader.getSystemResource("findables/" + findable + ".png");
 		BufferedImage image = ImageIO.read(url);
-		System.out.println(findable + ": " + ImageUtils.findMatch(fullScreen, image));
+		logger.info(findable + ": " + ImageUtils.findMatch(fullScreen, image));
 	}
 
 
 	private void cancelScreenMonitor(){
 		if (screenMonitorHandle != null
 				&& !screenMonitorHandle.isCancelled()) {
-			System.out.println("Cancelling screen monitor");
+			logger.info("Cancelling screen monitor");
 			screenMonitorHandle.cancel(true);
 			if(PrefName.IMAGE_SAVE_PROCESSED.getBoolean()){
 				for(BufferedImage img : processedImageCombiner.combine()){
@@ -249,12 +250,12 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		@Override
 		public void run() {
 			int THRESHOLD = 190;
-			System.out.println("Monitor running");
+			logger.info("Monitor running");
 			final BufferedImage img = ImageUtils.captureScreen(textRect);
 			final BufferedImage binImg = ImageUtils.erosion(Binarization.getBinarizedImage(img, THRESHOLD));
 			
 			if(bufferedImagesEqual(binImg, prevImg)){
-				System.out.println("Identical image");
+				logger.info("Identical image");
 				return;
 			}
 			prevImg = binImg;
@@ -271,11 +272,11 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 					CocData cocData = CocData.getInstance();
 					cocData.addData(result);
 				} catch (Exception e) {
-					System.out.println("Unable to create data from captured image");
+					logger.info("Unable to create data from captured image");
 					e.printStackTrace();
 				}
 			} else {
-				System.out.println("Same values, not logging statistics");
+				logger.info("Same values, not logging statistics");
 			}
 			
 			prevValues = values;
@@ -334,7 +335,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 	}
 
 	private void foo() {
-		System.out.println(String.format("Capturing (%d,%d) %dx%d", textRect.x,
+		logger.info(String.format("Capturing (%d,%d) %dx%d", textRect.x,
 				textRect.y, textRect.width, textRect.height));
 		final BufferedImage img = ImageUtils.captureScreen(textRect);
 		final BufferedImage binarizedImg = Binarization.getBinarizedImage(img);
@@ -362,24 +363,24 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 		final BufferedImage idi1 = ImageUtils.erosion(i2);
 		
 		String nums = ImageUtils.readImage(img);
-		System.out.println("Text: " + nums);
-//		System.out.println("BinarText: " + readImage(binarizedImg));
-		System.out.println("BinarText2: " + ImageUtils.readImage(binarizedImg2));
-		System.out.println("Enlarged: " + ImageUtils.readImage(enlargedBi));
-//		System.out.println("bi3: " + readImage(bi3));
-//		System.out.println("gs1: " + readImage(gs1));
-//		System.out.println("ebi1: " + readImage(ebi1));
-//		System.out.println("egs1: " + readImage(egs1));
-//		System.out.println("i1: " + readImage(i1));
-//		System.out.println("i2: " + readImage(i2));
+		logger.info("Text: " + nums);
+//		logger.info("BinarText: " + readImage(binarizedImg));
+		logger.info("BinarText2: " + ImageUtils.readImage(binarizedImg2));
+		logger.info("Enlarged: " + ImageUtils.readImage(enlargedBi));
+//		logger.info("bi3: " + readImage(bi3));
+//		logger.info("gs1: " + readImage(gs1));
+//		logger.info("ebi1: " + readImage(ebi1));
+//		logger.info("egs1: " + readImage(egs1));
+//		logger.info("i1: " + readImage(i1));
+//		logger.info("i2: " + readImage(i2));
 		
-		System.out.println("di1: " + ImageUtils.readImage(di1));
-//		System.out.println("di2: " + readImage(di2));
-//		System.out.println("di3: " + readImage(di3));
-		System.out.println("bi1: " + ImageUtils.readImage(bdi1));
-//		System.out.println("bdi2: " + readImage(bdi2));
-//		System.out.println("bdi3: " + readImage(bdi3));
-		System.out.println("idi1: " + ImageUtils.readImage(idi1));
+		logger.info("di1: " + ImageUtils.readImage(di1));
+//		logger.info("di2: " + readImage(di2));
+//		logger.info("di3: " + readImage(di3));
+		logger.info("bi1: " + ImageUtils.readImage(bdi1));
+//		logger.info("bdi2: " + readImage(bdi2));
+//		logger.info("bdi3: " + readImage(bdi3));
+		logger.info("idi1: " + ImageUtils.readImage(idi1));
 
 
 		SwingUtilities.invokeLater(new Runnable() {
@@ -393,7 +394,7 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 				at.scale(2.0, 2.0);
 				AffineTransformOp scaleOp = new AffineTransformOp(at, AffineTransformOp.TYPE_BICUBIC);
 				enlargedBi2 = scaleOp.filter(binarizedImg2, enlargedBi2);
-				System.out.println("Enlarged2: " + ImageUtils.readImage(enlargedBi2));
+				logger.info("Enlarged2: " + ImageUtils.readImage(enlargedBi2));
 				
 				JPanel panel = new JPanel();
 				panel.add(new JLabel(new ImageIcon(img)));

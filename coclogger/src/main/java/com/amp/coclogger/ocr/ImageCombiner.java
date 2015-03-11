@@ -7,10 +7,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+import org.apache.log4j.Logger;
+
 import com.amp.coclogger.prefs.ImageFileType;
 import com.amp.coclogger.prefs.PrefName;
 
 public class ImageCombiner {
+	private static final Logger logger = Logger.getLogger(ImageCombiner.class);
 	private Queue<BufferedImage> images;
 	int width, height;
 	int imagesPerPage;
@@ -40,7 +43,7 @@ public class ImageCombiner {
 		int w = width * cols;
 		int h = height * rows;
 		
-		System.out.println(String.format("Printing %d rows of %d columns at (%d x %d, %d x %d per pic)",
+		logger.info(String.format("Printing %d rows of %d columns at (%d x %d, %d x %d per pic)",
 				rows, cols, w, h, width, height ));
 		
 		
@@ -67,7 +70,7 @@ public class ImageCombiner {
 			for(int i = 0; i < rows; i++){
 				for(int j = 0; j < cols; j++){
 					BufferedImage img = images.poll();
-					System.out.println(String.format("Drawing img of width %d at location %d", img.getWidth(), width*j));
+					logger.info(String.format("Drawing img of width %d at location %d", img.getWidth(), width*j));
 					g2d.drawImage(img, null, width*j, height*i);
 					if(images.isEmpty()){
 						imagesToPrint.add(temp);

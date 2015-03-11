@@ -9,9 +9,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 public enum CocData {
 	INSTANCE;
 	
+	private static final Logger logger = Logger.getLogger(CocData.class);
 	private CocStats cocStats;
 	private List<CocResult> data;
 	
@@ -25,13 +28,13 @@ public enum CocData {
 			List<CocResult> result = (List<CocResult>)ois.readObject();
 			if(result == null){
 				result = new ArrayList<>();
-				System.out.println("No previous data, initializing as blank");
+				logger.info("No previous data, initializing as blank");
 			}
 			data = result;
 			cocStats = new CocStats(result);
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
-			System.out.println("No previous data, initializing as blank");
+			logger.info("No previous data, initializing as blank");
 			cocStats = new CocStats(new ArrayList<CocResult>());
 		}
 	}
@@ -42,7 +45,7 @@ public enum CocData {
 			dataLocation = "defaultCocData.cocd";
 		}
 		try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(dataLocation)))){
-			System.out.println("Writing data to file");
+			logger.info("Writing data to file");
 			oos.writeObject(data);
 		} catch (IOException e) {
 			e.printStackTrace();

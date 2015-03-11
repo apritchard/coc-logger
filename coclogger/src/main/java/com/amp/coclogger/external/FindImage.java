@@ -26,8 +26,8 @@ public class FindImage {
 				MatrixPosition result = new MatrixPosition();
 				result.line = i;
 				result.column = j;
-				System.out.println("Matching at line=" + result.line
-						+ ", column=" + result.column);
+//				logger.info("Matching at line=" + result.line
+//						+ ", column=" + result.column);
 				return result;
 			}
 		}

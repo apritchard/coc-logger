@@ -5,6 +5,8 @@ import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
+import org.apache.log4j.Logger;
+
 /**
  * Utility methods for manipulating the clash game in bluestacks through
  * mouse clicks and keyboard entry. Does not know anything about the
@@ -13,13 +15,13 @@ import java.awt.event.KeyEvent;
  *
  */
 public class AppControl {
-	
+	private static final Logger logger = Logger.getLogger(AppControl.class); 
 	private static Robot rob;
 	static {
 		try{
-			System.out.println("Initializing Robot.");
+			logger.info("Initializing Robot.");
 			rob = new Robot();
-			System.out.println("Finished!");
+			logger.info("Finished!");
 		} catch (AWTException awte){
 			awte.printStackTrace();
 		}

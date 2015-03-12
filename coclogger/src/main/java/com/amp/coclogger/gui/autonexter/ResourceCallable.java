@@ -14,10 +14,11 @@ import com.amp.coclogger.prefs.PrefName;
 public class ResourceCallable implements Callable<ResourceData>{
 	private static final Logger logger = Logger.getLogger(ResourceCallable.class);
 	
-	private int timeoutNano;
+	private long timeoutNano;
 	
 	public ResourceCallable(int timeoutSec){
-		timeoutNano = timeoutSec * 1000000000;
+		timeoutNano = (long)timeoutSec * 1000000000;
+		logger.info("TimeoutNano: " + timeoutNano);
 	}
 	
 	@Override
@@ -42,15 +43,18 @@ public class ResourceCallable implements Callable<ResourceData>{
 		}
 		
 		//try to parse until we get a good result or time out
-		ResourceData rd = DataUtils.parseResource(ImageUtils.readImage(img));
+		ResourceData rd = DataUtils.parseResource(ImageUtils.processAndRead(img));
 		while(rd == null){
 			logger.info("Still can't read, reattempting");
+			long elapsed = (System.nanoTime() - start) / 1000000000;
+			long limit = timeoutNano / 1000000000;
+			logger.info("Elapsed: " + elapsed + " Limit: " + limit);
 			if(System.nanoTime() - start > timeoutNano){
 				logger.info("Exceeded timeout, bailing");
 				throw new TimeoutException();
 			}
 			Thread.sleep(1000);
-			rd = DataUtils.parseResource(ImageUtils.readImage(x, y, width, height));			
+			rd = DataUtils.parseResource(ImageUtils.processAndReadImage(x, y, width, height));			
 		}
 		
 		return rd;

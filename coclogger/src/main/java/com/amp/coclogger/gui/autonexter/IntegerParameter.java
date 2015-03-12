@@ -1,14 +1,15 @@
 package com.amp.coclogger.gui.autonexter;
 
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.text.PlainDocument;
+
+import org.apache.log4j.Logger;
 
 import com.amp.coclogger.prefs.IntegerFilter;
 
 
 public class IntegerParameter extends Parameter {
+	private static final Logger logger = Logger.getLogger(IntegerParameter.class);
 	
 	public IntegerParameter(String name) {
 		super(name);

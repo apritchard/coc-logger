@@ -11,13 +11,14 @@ import net.miginfocom.swing.MigLayout;
 import com.amp.coclogger.prefs.PrefName;
 
 public class AutoNexter extends JFrame {
+	private static final long serialVersionUID = 1L;
 	
-	final String PARAM_ELIXIR = "Minimum elixir";
-	final String PARAM_GOLD = "Minimum gold";
-	final String PARAM_DARK_ELIXIR = "Dark elixir";
-	final String PARAM_TROPHIES_WIN = "Trophies win";
-	final String PARAM_TROPHIES_LOSE = "Trophies lose";
-	final String PARAM_DELAY = "Next delay";
+	public static final String PARAM_ELIXIR = "Minimum elixir";
+	public static final String PARAM_GOLD = "Minimum gold";
+	public static final String PARAM_DARK_ELIXIR = "Dark elixir";
+	public static final String PARAM_TROPHIES_WIN = "Trophies win";
+//	public static final String PARAM_TROPHIES_LOST = "Trophies lost";
+	public static final String PARAM_TIMEOUT = "Maximum wait";
 
 	public AutoNexter(){
 		addWindowListener(new NexterWindowListener(this));
@@ -26,15 +27,15 @@ public class AutoNexter extends JFrame {
 		Parameter gold = new IntegerParameter(PARAM_GOLD, 0, 2000000);
 		Parameter darkElixir = new IntegerParameter(PARAM_DARK_ELIXIR, 0, 5000);
 		Parameter trophiesWin = new IntegerParameter(PARAM_TROPHIES_WIN, 0, 50);
-		Parameter trophiesLose = new IntegerParameter(PARAM_TROPHIES_LOSE, 0, 50);
-		Parameter delay = new IntegerParameter(PARAM_DELAY, 1, 30);
+//		Parameter trophiesLose = new IntegerParameter(PARAM_TROPHIES_LOST, 0, 50);
+		Parameter delay = new IntegerParameter(PARAM_TIMEOUT, 1, 60);
 		
 		List<Parameter> parameters = new ArrayList<>();
 		parameters.add(elixir);
 		parameters.add(gold);
 		parameters.add(darkElixir);
 		parameters.add(trophiesWin);
-		parameters.add(trophiesLose);
+//		parameters.add(trophiesLose);
 		parameters.add(delay);
 		
 		JPanel parmForm = new ParameterPanel("AutoNext Parameters", parameters);

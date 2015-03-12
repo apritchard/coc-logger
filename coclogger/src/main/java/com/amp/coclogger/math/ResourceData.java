@@ -10,7 +10,12 @@ public class ResourceData {
 	private int gold;
 	private int darkElixir;
 	private int trophiesWon;
-	private int trophiesLost;
+//	private int trophiesLost;
+	
+	@Override
+	public String toString(){
+		return String.format("Gold: %d Elixir: %d Dark Elixir: %d Trophies: %d", gold, elixir, darkElixir, trophiesWon);
+	}
 	public int getElixir() {
 		return elixir;
 	}
@@ -35,11 +40,11 @@ public class ResourceData {
 	public void setTrophiesWon(int trophiesWon) {
 		this.trophiesWon = trophiesWon;
 	}
-	public int getTrophiesLost() {
-		return trophiesLost;
-	}
-	public void setTrophiesLost(int trophiesLost) {
-		this.trophiesLost = trophiesLost;
-	}
+//	public int getTrophiesLost() {
+//		return trophiesLost;
+//	}
+//	public void setTrophiesLost(int trophiesLost) {
+//		this.trophiesLost = trophiesLost;
+//	}
 
 }

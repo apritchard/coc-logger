@@ -103,12 +103,19 @@ public class ImageUtils {
 		return bestLeague;
 	}
 	
-	public static String readImage(Rectangle r){
-		return readImage(captureScreen(r));
+	public static String processAndReadImage(Rectangle r){
+		return processAndRead(captureScreen(r));
 	}
 	
-	public static String readImage(int x, int y, int width, int height){
-		return readImage(captureScreen(x, y, width, height));
+	public static String processAndReadImage(int x, int y, int width, int height){
+		return processAndRead(captureScreen(x, y, width, height));
+	}
+	
+	public static String processAndRead(BufferedImage bi){
+		int THRESHOLD = 190; // light cutoff level - 190 is COC text-specific
+		BufferedImage binarizedImage = Binarization.getBinarizedImage(bi, THRESHOLD);
+		BufferedImage erodedImg = ImageUtils.erosion(binarizedImage);
+		return readImage(erodedImg);
 	}
 	
 	public static String readImage(BufferedImage bi) {
@@ -119,6 +126,7 @@ public class ImageUtils {
 
 		try {
 			String text = tess.doOCR(bi);
+			logger.info("Found string: " + text);
 			return text;
 		} catch (TesseractException e) {
 			e.printStackTrace();
@@ -143,6 +151,7 @@ public class ImageUtils {
 
 
 	public static BufferedImage captureScreen(int x, int y, int width, int height) {
+		logger.info("Capturing image at " + x + ", " + y + " " + width +"x" + height);
 		try {
 			Robot robot = new Robot();
 			Rectangle screenRectangle = new Rectangle(x, y, width, height);
@@ -252,6 +261,7 @@ public class ImageUtils {
 	}
 
 	public static BufferedImage erosion(BufferedImage image) {
+		logger.info("Erroding image");
 		BufferedImage output = new BufferedImage(image.getWidth(),
 				image.getHeight(), image.getType());
 		int[] b = { 1, 1, 1, 1 };

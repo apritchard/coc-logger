@@ -5,8 +5,10 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -14,6 +16,7 @@ import javax.swing.JPanel;
 import org.apache.log4j.Logger;
 
 import com.amp.coclogger.gui.util.AppControl;
+import com.amp.coclogger.math.ResourceData;
 import com.amp.coclogger.prefs.PrefName;
 
 public class NexterPanel extends JPanel{
@@ -22,12 +25,12 @@ public class NexterPanel extends JPanel{
 	
 	private ExecutorService exec = null;
 	
-	private final Map<String, Parameter> parmMap = new HashMap<>();
+	private final Map<String, Parameter> paramMap = new HashMap<>();
 	
 	
 	public NexterPanel(List<Parameter> parameters){
 		for(Parameter parm : parameters){
-			parmMap.put(parm.getName(), parm);
+			paramMap.put(parm.getName(), parm);
 		}
 		
 		JButton btnBegin = new JButton("Begin");
@@ -51,6 +54,7 @@ public class NexterPanel extends JPanel{
 				
 			}
 		});
+		add(btnCancel);
 	}
 	
 	private class NexterHandler implements Runnable {
@@ -86,12 +90,65 @@ public class NexterPanel extends JPanel{
 			AppControl.clickMouse(x, y);
 		}
 		
+		private void clickNext(){
+			logger.info("Clicking Next");
+			int x = PrefName.NEXT_X.getInt();
+			int y = PrefName.NEXT_Y.getInt();
+			AppControl.clickMouse(x, y);
+		}
+		
 		/**
 		 * This should be called while zoomed all the way out and on or
 		 * waiting for loading of battle screen
 		 */
 		private void beginNexting(){
+			while(true){
+				int timeOut = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TIMEOUT)).getInt();
+				logger.info("Timeout: " + timeOut);
+				ResourceCallable rc = new ResourceCallable(timeOut);
+				Future<ResourceData> futureResource = exec.submit(rc);
+				try {
+					ResourceData resourceData = futureResource.get();
+					if(resourceData == null){
+						logger.warn("Timed out");
+						return;
+					} else if (meetsCriteria(resourceData)){
+						logger.info("Sufficient Resources found!");
+						return;
+					} else {
+						logger.info("Insufficient Resources, continuing to search.");
+						clickNext();
+						continue;
+					}
+					
+				} catch (InterruptedException | ExecutionException e) {
+					e.printStackTrace();
+					logger.warn("Resource reading cancelled, bailing");
+					return;
+				}
+			}
+		}
+		
+		/**
+		 * Returns true if this resourceData matches the requirements
+		 * in the parameters
+		 * @param rd
+		 * @return
+		 */
+		private boolean meetsCriteria(ResourceData rd){
+			int minGold = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_GOLD)).getInt();
+			int minElixir = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_ELIXIR)).getInt();
+			int minDarkElixir = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_DARK_ELIXIR)).getInt();
+			int minTrophiesWin = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TROPHIES_WIN)).getInt();
+			logger.info("Checking Resources: " + rd.toString());
+//			int minTrophiesLost = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TROPHIES_LOST)).getInt();
 			
+			return 
+					rd.getGold() > minGold &&
+					rd.getElixir() > minElixir &&
+					rd.getDarkElixir() > minDarkElixir &&
+					rd.getTrophiesWon() > minTrophiesWin; // &&
+//					rd.getTrophiesLost() > minTrophiesLost;
 		}
 	}
 

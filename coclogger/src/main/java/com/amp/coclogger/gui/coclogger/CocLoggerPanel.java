@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -144,15 +145,15 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
-		baz();
-//		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
-//			logger.info("Starting new monitor with delay of " + delaySeconds + " seconds");
-//			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
-//					0, delaySeconds, TimeUnit.SECONDS);
-//			
-//			processedImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
-//			rawImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
-//		}		
+//		baz();
+		if(screenMonitorHandle == null || screenMonitorHandle.getDelay(TimeUnit.MILLISECONDS) <= 0){
+			logger.info("Starting new monitor with delay of " + delaySeconds + " seconds");
+			screenMonitorHandle = monitorService.scheduleAtFixedRate(screenMonitor,
+					0, delaySeconds, TimeUnit.SECONDS);
+			
+			processedImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
+			rawImageCombiner = new ImageCombiner(textRect.width, textRect.height, PrefName.IMAGES_PER_PAGE.getInt());
+		}		
 	}
 	
 	private void bar() throws IOException {
@@ -261,6 +262,10 @@ public class CocLoggerPanel extends JPanel implements SelectionListener, Prefere
 			prevImg = binImg;
 			
 			final String values = ImageUtils.readImage(binImg);
+			final String values2 = ImageUtils.processAndReadImage(textRect);
+			
+			logger.info("Values: \n" + values);
+			logger.info("Values2: \n" + values2);
 			
 			if (!values.equalsIgnoreCase(prevValues)) {
 

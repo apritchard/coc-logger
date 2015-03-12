@@ -30,6 +30,7 @@ public class Binarization {
 	}
 	
 	public static BufferedImage getBinarizedImage(BufferedImage original, int threshold){
+		System.out.println("Getting Binarized Image with Threshold: " + threshold);
 		return binarize(toGray(original), threshold);
 	}
 

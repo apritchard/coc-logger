@@ -126,7 +126,7 @@ public class ImageUtils {
 
 		try {
 			String text = tess.doOCR(bi);
-			logger.info("Found string: " + text);
+			logger.debug("Found string: " + text);
 			return text;
 		} catch (TesseractException e) {
 			e.printStackTrace();
@@ -151,7 +151,7 @@ public class ImageUtils {
 
 
 	public static BufferedImage captureScreen(int x, int y, int width, int height) {
-		logger.info("Capturing image at " + x + ", " + y + " " + width +"x" + height);
+		logger.debug("Capturing image at " + x + ", " + y + " " + width +"x" + height);
 		try {
 			Robot robot = new Robot();
 			Rectangle screenRectangle = new Rectangle(x, y, width, height);
@@ -261,7 +261,7 @@ public class ImageUtils {
 	}
 
 	public static BufferedImage erosion(BufferedImage image) {
-		logger.info("Erroding image");
+		logger.debug("Erroding image");
 		BufferedImage output = new BufferedImage(image.getWidth(),
 				image.getHeight(), image.getType());
 		int[] b = { 1, 1, 1, 1 };

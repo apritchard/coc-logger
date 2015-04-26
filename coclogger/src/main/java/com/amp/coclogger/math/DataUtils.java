@@ -42,7 +42,7 @@ public class DataUtils {
 			rd.setDarkElixir(Integer.parseInt(darkElixirStr));
 			rd.setTrophiesWon(Integer.parseInt(trophiesStr));
 //			rd.setTrophiesLost(Integer.parseInt(loseTrophiesStr));
-			logger.info("Returning " + rd);
+			logger.debug("Returning " + rd);
 			return rd;
 		} catch (NumberFormatException nfe){
 			logger.info("Invalid resource string: " + ocr);

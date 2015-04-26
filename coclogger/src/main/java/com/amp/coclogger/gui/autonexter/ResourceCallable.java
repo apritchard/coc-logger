@@ -18,7 +18,7 @@ public class ResourceCallable implements Callable<ResourceData>{
 	
 	public ResourceCallable(int timeoutSec){
 		timeoutNano = (long)timeoutSec * 1000000000;
-		logger.info("TimeoutNano: " + timeoutNano);
+		logger.trace("TimeoutNano: " + timeoutNano);
 	}
 	
 	@Override
@@ -29,6 +29,7 @@ public class ResourceCallable implements Callable<ResourceData>{
 		int height = PrefName.TEXT_HEIGHT.getInt();
 		
 		long start = System.nanoTime();
+		logger.info("Waiting for next match.");
 		
 		//initial fast check for image lumosity to rule out transition screen
 		BufferedImage img = ImageUtils.captureScreen(x, y, width, height);
@@ -37,7 +38,6 @@ public class ResourceCallable implements Callable<ResourceData>{
 				logger.info("Exceeded timeout, bailing");
 				throw new TimeoutException();
 			}
-			logger.info("Waiting for next match.");
 			Thread.sleep(1000);
 			img = ImageUtils.captureScreen(x, y, width, height);
 		}
@@ -45,7 +45,6 @@ public class ResourceCallable implements Callable<ResourceData>{
 		//try to parse until we get a good result or time out
 		ResourceData rd = DataUtils.parseResource(ImageUtils.processAndRead(img));
 		while(rd == null){
-			logger.info("Still can't read, reattempting");
 			long elapsed = (System.nanoTime() - start) / 1000000000;
 			long limit = timeoutNano / 1000000000;
 			logger.info("Elapsed: " + elapsed + " Limit: " + limit);

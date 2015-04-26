@@ -104,7 +104,6 @@ public class NexterPanel extends JPanel{
 		private void beginNexting(){
 			while(true){
 				int timeOut = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TIMEOUT)).getInt();
-				logger.info("Timeout: " + timeOut);
 				ResourceCallable rc = new ResourceCallable(timeOut);
 				Future<ResourceData> futureResource = exec.submit(rc);
 				try {
@@ -113,11 +112,12 @@ public class NexterPanel extends JPanel{
 						logger.warn("Timed out");
 						return;
 					} else if (meetsCriteria(resourceData)){
-						logger.info("Sufficient Resources found!");
+						logger.info("Sufficient Resources found! " + resourceData.toString());
 						return;
 					} else {
-						logger.info("Insufficient Resources, continuing to search.");
+						logger.info("Insufficient Resources, continuing to search. " + resourceData.toString());
 						clickNext();
+						Thread.sleep(2000);
 						continue;
 					}
 					
@@ -140,7 +140,7 @@ public class NexterPanel extends JPanel{
 			int minElixir = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_ELIXIR)).getInt();
 			int minDarkElixir = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_DARK_ELIXIR)).getInt();
 			int minTrophiesWin = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TROPHIES_WIN)).getInt();
-			logger.info("Checking Resources: " + rd.toString());
+			logger.debug("Checking Resources: " + rd.toString());
 //			int minTrophiesLost = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TROPHIES_LOST)).getInt();
 			
 			return 

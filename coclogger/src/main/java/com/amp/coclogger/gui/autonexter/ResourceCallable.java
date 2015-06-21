@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.log4j.Logger;
+import org.apache.log4j.lf5.util.ResourceUtils;
 
 import com.amp.coclogger.math.DataUtils;
 import com.amp.coclogger.math.ResourceData;
@@ -43,8 +44,9 @@ public class ResourceCallable implements Callable<ResourceData>{
 		}
 		
 		//try to parse until we get a good result or time out
+		int validAttempts = 0;
 		ResourceData rd = DataUtils.parseResource(ImageUtils.processAndRead(img));
-		while(rd == null){
+		while(rd == null || (!DataUtils.isValid(rd) && validAttempts < 4)){
 			long elapsed = (System.nanoTime() - start) / 1000000000;
 			long limit = timeoutNano / 1000000000;
 			logger.info("Elapsed: " + elapsed + " Limit: " + limit);
@@ -53,7 +55,11 @@ public class ResourceCallable implements Callable<ResourceData>{
 				throw new TimeoutException();
 			}
 			Thread.sleep(1000);
-			rd = DataUtils.parseResource(ImageUtils.processAndReadImage(x, y, width, height));			
+			rd = DataUtils.parseResource(ImageUtils.processAndReadImage(x, y, width, height));
+			if(rd != null && !DataUtils.isValid(rd)){
+				logger.info("Invalid result, retrying...");
+				validAttempts++;
+			}
 		}
 		
 		return rd;

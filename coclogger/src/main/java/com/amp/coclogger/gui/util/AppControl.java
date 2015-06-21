@@ -11,6 +11,9 @@ import org.apache.log4j.Logger;
  * Utility methods for manipulating the clash game in bluestacks through
  * mouse clicks and keyboard entry. Does not know anything about the
  * application, other than location parameters specified by the caller.
+ * 
+ * At some point, replace with OS-specific control? Since Robot breaks
+ * mouse default move speed on windows.
  * @author alex
  *
  */

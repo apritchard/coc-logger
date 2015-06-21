@@ -1,5 +1,7 @@
 package com.amp.coclogger.gui.autonexter;
 
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
@@ -11,11 +13,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
 import com.amp.coclogger.gui.util.AppControl;
+import com.amp.coclogger.gui.util.AudioUtil;
+import com.amp.coclogger.math.DataUtils;
 import com.amp.coclogger.math.ResourceData;
 import com.amp.coclogger.prefs.PrefName;
 
@@ -26,47 +34,126 @@ public class NexterPanel extends JPanel{
 	private ExecutorService exec = null;
 	
 	private final Map<String, Parameter> paramMap = new HashMap<>();
+	private final JLabel lblAverageGold = new JLabel("0");
+	private final JLabel lblAverageElixir = new JLabel("0");
+	private final JLabel lblAverageDarkElixir = new JLabel("0");
+	private final JLabel lblAverageTrophies = new JLabel("0");
+	private final JLabel lblNexts = new JLabel("0");
+	
+	private final JButton btnAction;
+	private final ActionListener actStart;
+	private final ActionListener actCancel;
+	private final ActionListener actResume;
+	
+	private long totalElixir;
+	private long totalGold;
+	private long totalDarkElixir;
+	private long totalTrophies;
+	private long totalNexts;
+	
+	private final String CANCEL_TEXT = "Cancel";
+	private final String RESUME_TEXT = "Resume";
+	private final String START_TEXT = "Start";
 	
 	
 	public NexterPanel(List<Parameter> parameters){
+		setLayout(new MigLayout());
 		for(Parameter parm : parameters){
 			paramMap.put(parm.getName(), parm);
 		}
 		
-		JButton btnBegin = new JButton("Begin");
-		btnBegin.addActionListener(new ActionListener() {
+		actStart = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				setActionButton(CANCEL_TEXT, actCancel);
 				exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-				NexterHandler nh = new NexterHandler();
-				exec.execute(nh);
+				NexterHandler nh = new NexterHandler(NexterBehavior.START);
+				exec.execute(nh);		
 			}
-		});
-		add(btnBegin);
+		};
 		
-		JButton btnCancel = new JButton("Cancel");
-		btnCancel.addActionListener(new ActionListener() {
+		actCancel = new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				setActionButton(START_TEXT, actStart);
 				if(exec != null){
 					exec.shutdownNow();
 				}
-				
+			}
+		};
+		
+		actResume = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setActionButton(CANCEL_TEXT, actCancel);
+				exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+				NexterHandler nh = new NexterHandler(NexterBehavior.RESUME);
+				exec.execute(nh);
+			}
+		};
+		
+		btnAction = new JButton(START_TEXT);
+		btnAction.addActionListener(actStart);
+		add(btnAction, "wrap");
+		add(new JLabel("Nexts:"));
+		add(lblNexts, "wrap");
+		add(new JLabel("Avg. Gold:"));
+		add(lblAverageGold, "wrap");
+		add(new JLabel("Avg. Elix:"));
+		add(lblAverageElixir, "wrap");
+		add(new JLabel("Avg. D.E.:"));
+		add(lblAverageDarkElixir, "wrap");
+
+	}
+	
+	private void setActionButton(final String text, final ActionListener newListener){
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				for(ActionListener l : btnAction.getActionListeners()){
+					btnAction.removeActionListener(l);
+				}
+				btnAction.setText(text);
+				btnAction.addActionListener(newListener);
 			}
 		});
-		add(btnCancel);
+	}
+	private void updatePanelData(ResourceData rd){
+		totalElixir += rd.getElixir();
+		totalGold += rd.getGold();
+		totalDarkElixir += rd.getDarkElixir();
+		totalTrophies += rd.getTrophiesWon();
+		totalNexts++;
+		
+		lblAverageElixir.setText(Long.toString(totalElixir/totalNexts));
+		lblAverageGold.setText(Long.toString(totalGold/totalNexts));
+		lblAverageDarkElixir.setText(Long.toString(totalDarkElixir/totalNexts));
+		lblNexts.setText(Long.toString(totalNexts));
+	}
+	
+	private enum NexterBehavior{
+		START, RESUME;
 	}
 	
 	private class NexterHandler implements Runnable {
+		NexterBehavior nb;
+		
+		public NexterHandler(NexterBehavior nb){
+			this.nb = nb;
+		}
 		
 		@Override
 		public void run() {
-			//zoom all the way out
-			zoomOut();
-			clickAttack();
-			clickFindAMatch();
-			//TODO click through shield notifier if necessary
-			beginNexting();			
+			switch(nb){
+			case START:
+				zoomOut();
+				clickAttack();
+				clickFindAMatch();
+			case RESUME:
+				beginNexting();
+			default:
+				break;
+			}
 		}
 		
 		private void zoomOut(){
@@ -90,7 +177,7 @@ public class NexterPanel extends JPanel{
 			AppControl.clickMouse(x, y);
 		}
 		
-		private void clickNext(){
+		private void clickNext() {
 			logger.info("Clicking Next");
 			int x = PrefName.NEXT_X.getInt();
 			int y = PrefName.NEXT_Y.getInt();
@@ -102,28 +189,47 @@ public class NexterPanel extends JPanel{
 		 * waiting for loading of battle screen
 		 */
 		private void beginNexting(){
+			boolean first = true;
 			while(true){
 				int timeOut = ((IntegerParameter)paramMap.get(AutoNexter.PARAM_TIMEOUT)).getInt();
 				ResourceCallable rc = new ResourceCallable(timeOut);
 				Future<ResourceData> futureResource = exec.submit(rc);
 				try {
 					ResourceData resourceData = futureResource.get();
+					if(DataUtils.isValid(resourceData)){
+						updatePanelData(resourceData);
+					}
 					if(resourceData == null){
 						logger.warn("Timed out");
+						setActionButton(START_TEXT, actStart);
+						AudioUtil.FAIL.play();
 						return;
-					} else if (meetsCriteria(resourceData)){
+					} else if (DataUtils.isValid(resourceData) && meetsCriteria(resourceData)){
 						logger.info("Sufficient Resources found! " + resourceData.toString());
+						setActionButton(RESUME_TEXT, actResume);
+						AudioUtil.DONE.play();
 						return;
 					} else {
-						logger.info("Insufficient Resources, continuing to search. " + resourceData.toString());
+						if(!DataUtils.isValid(resourceData)){
+							logger.info("Invalid Resource line: \n" + resourceData.toString());
+							AudioUtil.FAIL.play();
+						} else {
+							logger.info("Insufficient Resources, continuing to search. " + resourceData.toString());
+						}
+						if(!first && !MouseInfo.getPointerInfo().getLocation().equals(new Point(PrefName.NEXT_X.getInt(), PrefName.NEXT_Y.getInt()))){
+							logger.warn("Mouse moved, bailing");
+							setActionButton(RESUME_TEXT, actResume);
+							return;
+						}
+						first = false;
 						clickNext();
 						Thread.sleep(2000);
 						continue;
 					}
 					
 				} catch (InterruptedException | ExecutionException e) {
-					e.printStackTrace();
 					logger.warn("Resource reading cancelled, bailing");
+					setActionButton(START_TEXT, actStart);
 					return;
 				}
 			}
@@ -150,6 +256,7 @@ public class NexterPanel extends JPanel{
 					rd.getTrophiesWon() > minTrophiesWin; // &&
 //					rd.getTrophiesLost() > minTrophiesLost;
 		}
+		
 	}
 
 	
